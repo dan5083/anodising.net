@@ -17,11 +17,11 @@ Hosting: Fully deployed on Microsoft Azure
 ORM Integrations: Hybrid properties, JSON fields, constraints, and relationship mapping via SQLAlchemy
 
 ✅ Key Features
-Order & Job Management:
-Input orders, define parts, attach images, track by customer.
-
 Gantt Scheduling:
-Auto-generates detailed job breakdowns per part, including process-specific durations, rinse/dye/etch/pack operations, and load balancing logic.
+Auto-generates detailed job breakdowns per part, including process-specific durations, rinse/dye/etch/pack operations, and load balancing logic. WALKTHROUGH demo https://www.youtube.com/watch?v=ouzlk3UUetM
+
+Order & Job Management:
+Input orders, define parts, attach images, track by customer. Demo https://www.youtube.com/watch?v=8tDmcUUkYCM&t=1s
 
 Component Job Engine:
 Dynamically creates multi-load process plans, complete with resource estimation (e.g., jig use, buzzbars, operators).
