@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Customers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333333; /* Charcoal Background */
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ✅ Header Styling */
+        header {
+            background-color: #222;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        header img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        /* ✅ Navigation Bar */
+        nav {
+            background: #222;
+            text-align: center;
+            padding: 10px;
+        }
+
+        nav a {
+            color: #28a745;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: inline-block;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            background: #444;
+            border-radius: 5px;
+        }
+
+        /* ✅ Form Styling */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #444;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #28a745;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            background: #555;
+            color: white;
+        }
+
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        /* ✅ Customer List Styling */
+        .customer-list {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        .customer-list li {
+            background-color: #555;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .customer-list li:hover {
+            background-color: #666;
+        }
+
+        /* ✅ Search Box */
+        #search-box {
+            width: 100%;
+            padding: 10px;
+            background: #555;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ✅ Header with Logo -->
+    <header>
+        <img src="https://danstoreacc.blob.core.windows.net/bamscontainer/Black%20Grey%20Simple%20Initial%20Logo%20(3).png" alt="Anodising.net Logo">
+    </header>
+
+    <!-- ✅ Navigation Bar -->
+    <nav>
+        <a href="{{ url_for('orders') }}">Create/View Orders</a>
+        <a href="{{ url_for('component_jobs') }}">View Component Jobs</a>
+        <a href="{{ url_for('manage_parts') }}">Manage Parts</a>
+        <a href="{{ url_for('jigs') }}">View Jigs</a>
+        <a href="{{ url_for('gantt_chart') }}">🏭 Job Schedule</a>
+    </nav>
+
+    <div class="container">
+        <h1>Manage Customers</h1>
+
+        <!-- ✅ Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <!-- ✅ Form to Add New Customer -->
+        <h2>Add New Customer</h2>
+        <form action="{{ url_for('manage_customers') }}" method="post">
+            <label for="customer_name">Customer Name:</label>
+            <input type="text" id="customer_name" name="customer_name" required>
+            <input type="submit" value="Add Customer">
+        </form>
+
+        <hr>
+
+        <!-- ✅ Search Customers -->
+        <h2>Search Customers</h2>
+        <input type="text" id="search-box" placeholder="Search for customers..." onkeyup="filterCustomers()">
+
+        <!-- ✅ List of Existing Customers -->
+        <h2>Existing Customers</h2>
+        <ul id="customer-list" class="customer-list">
+            {% for customer in customers %}
+                <li>{{ customer['customer_name'] }}</li>
+            {% endfor %}
+        </ul>
+
+        {% if not customers %}
+            <p style="text-align: center;">No customers available.</p>
+        {% endif %}
+    </div>
+
+    <!-- ✅ JavaScript to filter customers dynamically -->
+    <script>
+        function filterCustomers() {
+            var input = document.getElementById("search-box");
+            var filter = input.value.toLowerCase();
+            var ul = document.getElementById("customer-list");
+            var li = ul.getElementsByTagName("li");
+
+            for (var i = 0; i < li.length; i++) {
+                var customerName = li[i].textContent || li[i].innerText;
+                if (customerName.toLowerCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>

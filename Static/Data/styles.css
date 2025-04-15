@@ -1,0 +1,213 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+h1, h2 {
+    color: #444;
+}
+
+p {
+    line-height: 1.6;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Button Styles */
+button, input[type="submit"] {
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+button:hover, input[type="submit"]:hover {
+    background-color: #4cae4c;
+}
+
+/* Form Styles */
+form {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="text"], select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Flash Message Styles */
+.flash-message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.flash-message.success {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+}
+
+.flash-message.warning {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+}
+
+.flash-message.danger {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;  
+}
+
+/* Clean Dropdown Styles */
+.select-with-thumbnail {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+.select-with-thumbnail select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Jigs Grid Styles */
+.jigs-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px; /* Spacing between the items */
+}
+
+.jig-container {
+    flex: 1 1 calc(33.33% - 20px); /* Each item takes up approximately 1/3 of the row minus some spacing */
+    margin-bottom: 20px; /* Space at the bottom of each item */
+    box-sizing: border-box; /* Ensures padding and border are included in the width/height */
+    text-align: center; /* Center align text within each container */
+}
+
+.jig-container img {
+    height: 150px; /* Set a consistent height */
+    object-fit: contain; /* Ensure the image scales without distortion */
+    width: 100%; /* Make the image fill the container width */
+    max-width: 100%; /* Ensure it doesn't exceed container width */
+}
+
+/* Gantt Chart Styles */
+.gantt-chart-container {
+    width: 100%;
+    overflow-x: auto; /* Allows scrolling if the timeline is too wide */
+}
+
+.gantt-chart {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap; /* Prevents cell wrapping */
+}
+
+.gantt-chart th, .gantt-chart td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+.gantt-chart th {
+    background-color: #f2f2f2;
+    position: sticky;
+    top: 0; /* Keeps the header sticky when scrolling */
+    z-index: 2;
+}
+
+.time-slot {
+    min-width: 100px;
+    text-align: center;
+    background-color: #f9f9f9;
+}
+
+.operation-block {
+    background-color: #5cb85c; /* Match button color for consistency */
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 2px;
+    position: relative;
+    display: inline-block; /* Ensure that blocks don't stack if width is reduced */
+}
+
+.operation-block.wide {
+    width: 300px; /* Example width, adjust as needed */
+}
+
+.operation-block.medium {
+    width: 150px; /* Example width, adjust as needed */
+}
+
+.operation-block.narrow {
+    width: 75px; /* Example width, adjust as needed */
+}
+
+.operation-block .tank-info {
+    font-style: italic;
+    color: #fff;
+    display: block;
+    margin-top: 5px;
+}
+
+.operation-row {
+    height: 50px; /* Makes rows tall enough to accommodate operation blocks */
+}

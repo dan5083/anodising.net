@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Parts</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333333; /* Charcoal Background */
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header Styling */
+        header {
+            background-color: #222;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        header img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        /* ✅ Navigation Bar */
+        nav {
+            background: #222;
+            text-align: center;
+            padding: 10px;
+        }
+
+        nav a {
+            color: #28a745;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: inline-block;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            background: #444;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ✅ Header with Logo -->
+    <header>
+        <img src="https://danstoreacc.blob.core.windows.net/bamscontainer/Black%20Grey%20Simple%20Initial%20Logo%20(3).png" alt="Anodising.net Logo">
+    </header>
+
+    <!-- ✅ Navigation Bar -->
+    <nav>
+        <a href="/orders">Orders</a>
+        <a href="/component_jobs">Component Jobs</a>
+        <a href="/manage_customers">Manage Customers</a>
+        <a href="/jigs">Jigs</a>
+        <a href="/gantt_chart">🏭 Job Schedule</a>
+    </nav>
+    
+    <h1>Manage Parts</h1>
+
+    <!-- Search by Customer and Part -->
+    <div>
+        <label for="customer-dropdown">Select Customer:</label>
+        <select id="customer-dropdown" onchange="filterPartsByCustomer()">
+            <option value="">All Customers</option>
+            {% for customer in customers %}
+                <option value="{{ customer.customer_id }}">{{ customer.customer_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="part-dropdown">Select Part:</label>
+        <select id="part-dropdown">
+            <option value="">All Parts</option>
+        </select>
+    </div>
+
+    <!-- Search Bar -->
+    <div>
+        <label for="search-box">Search Parts:</label>
+        <input type="text" id="search-box" placeholder="Search by part number or description..." onkeyup="filterParts()">
+    </div>
+
+    <hr>
+
+    <!-- List of Existing Parts -->
+    <h2>Parts</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="part-list">
+            {% for part in parts %}
+                <tr>
+                    <td>{{ part.customer_name }}</td>
+                    <td>{{ part.part_number }}</td>
+                    <td>{{ part.part_description }}</td>
+                    <td>
+                        <!-- 🚀 Delete Part Form -->
+                        <form action="{{ url_for('manage_parts') }}" method="post" style="display:inline;">
+                            <input type="hidden" name="part_number" value="{{ part.part_number }}">
+                            <button type="submit" name="action" value="delete_part">Delete part from database</button>
+                        </form>
+
+                        <!-- 🚀 Upload Image Form -->
+                        <form action="{{ url_for('manage_parts') }}" method="post" enctype="multipart/form-data" style="display:inline;">
+                            <input type="hidden" name="part_number" value="{{ part.part_number }}">
+
+                            <!-- ✅ Image Upload Button -->
+                            <div class="upload-button">
+                                <input type="file" name="image_file" id="image_{{ part.part_number }}" accept=".png,.jpg,.jpeg,.gif,.bmp"
+                                    onchange="previewImage(event, '{{ part.part_number }}')">
+                                <label for="image_{{ part.part_number }}">Upload Image</label>
+                            </div>
+
+                            <!-- ✅ Submit button (Initially Hidden & Styled) -->
+                            <button type="submit" name="action" value="upload_image" id="submit_{{ part.part_number }}" class="submit-button" style="display:none;">
+                                Submit Part Image
+                            </button>
+                        </form>
+
+                        <!-- ✅ Display existing image if available -->
+                        {% if part.image %}
+                            <br>
+                            <img src="{{ part.image }}" alt="Part Image" class="image-preview" id="preview_{{ part.part_number }}">
+                        {% else %}
+                            <br>
+                            <img id="preview_{{ part.part_number }}" class="image-preview" src="" alt="Image Preview" style="display:none;">
+                            <p>No image uploaded</p>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div id="pagination-controls">
+        <button onclick="prevPage()">Previous</button>
+        <span id="page-info">Page 1 of X</span>
+        <button onclick="nextPage()">Next</button>
+    </div>
+
+    <!-- JavaScript for Search, Pagination, and Image Preview -->
+    <script>
+        function filterParts() {
+            const input = document.getElementById("search-box").value.toLowerCase();
+            const rows = document.getElementById("part-list").getElementsByTagName("tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                let match = false;
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(input)) {
+                        match = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = match ? "" : "none";
+            }
+        }
+
+        function filterPartsByCustomer() {
+            const customerId = document.getElementById("customer-dropdown").value;
+
+            fetch(`/get_parts/${customerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const partDropdown = document.getElementById("part-dropdown");
+                    partDropdown.innerHTML = '<option value="">All Parts</option>';
+                    data.forEach(part => {
+                        const option = document.createElement("option");
+                        option.value = part.part_number;
+                        option.textContent = part.part_number;
+                        partDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching parts:', error));
+        }
+
+        function previewImage(event, partNumber) {
+            const fileInput = event.target;
+            const file = fileInput.files[0];  // Get the selected file
+            const preview = document.getElementById(`preview_${partNumber}`);
+            const submitButton = document.getElementById(`submit_${partNumber}`);
+        
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                    preview.src = reader.result;
+                    preview.style.display = "block";  // Show the image
+                };
+                reader.readAsDataURL(file);
+        
+                // Show submit button after an image is selected
+                submitButton.style.display = "inline-block";
+            } else {
+                // If no file is selected, hide the preview and submit button
+                preview.src = "";
+                preview.style.display = "none";
+                submitButton.style.display = "none";
+            }
+        }            
+
+        // Pagination functions (placeholder logic)
+        function prevPage() {
+            // Handle previous page logic
+        }
+
+        function nextPage() {
+            // Handle next page logic
+        }
+    </script>
+</body>
+</html>

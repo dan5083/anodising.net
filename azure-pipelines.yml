@@ -1,0 +1,67 @@
+trigger: 
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Step 1: Use Python Version
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+      allowUnstable: true
+      addToPath: true
+
+  # Step 2: Install OS-level dependencies
+  - task: Bash@3
+    displayName: "Install OS-level dependencies"
+    inputs:
+      targetType: 'inline'
+      script: |
+        sudo apt-get update
+        sudo apt-get install -y unixodbc unixodbc-dev
+
+  # Step 3: Remove existing virtual environment (if any) and create a new one
+  - script: |
+      rm -rf antenv
+      python -m venv antenv
+      source antenv/bin/activate
+      pip install --upgrade pip
+      pip install pyodbc==5.2.0 --force-reinstall --no-cache-dir
+      pip install -r requirements.txt
+      pip show pyodbc
+    displayName: 'Setup Python Virtual Environment and Install Dependencies'
+
+  # Step 4: Create release package
+  - script: |
+      mkdir -p $(Build.ArtifactStagingDirectory)
+      zip -r $(Build.ArtifactStagingDirectory)/release.zip ./* -x "antenv/*"
+      ls -al $(Build.ArtifactStagingDirectory)
+    displayName: 'Create release package'
+
+  # Step 5: Publish artifact
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
+    displayName: 'Publish artifact'
+
+  # Step 6: Download artifact
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'current'
+      artifactName: 'drop'
+      path: '$(Pipeline.Workspace)/drop'
+    displayName: 'Download artifact'
+
+  # Step 7: Deploy to Azure Web App
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: 'AzureManualServiceConnection'
+      appName: 'danbadgershedules'
+      package: '$(Pipeline.Workspace)/drop/release.zip'
+      runtimeStack: 'PYTHON|3.11'
+
+  # Step 8: Publish final build artifacts (optional cleanup step)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish final build artifacts'

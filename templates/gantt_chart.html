@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Schedule - Gantt Chart</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <!-- Vis.js for Gantt Chart -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    
+    <style>
+    /* 🏭 Background and General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+        }
+
+        .container {
+            max-width: 95%;
+        }
+
+        .form-container {
+            background: #444;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+        }
+
+        /* ✅ Make text visible on hover */
+        .vis-item:hover {
+            overflow: visible !important;
+            white-space: normal !important;
+            min-width: 200px !important;
+            z-index: 1000 !important;
+            background-color: rgba(0, 0, 0, 0.8) !important;
+            padding: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* ✅ Expand on Click */
+        .vis-item.expanded {
+            width: auto !important;
+            min-width: 250px !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            padding: 8px;
+        }     
+            
+
+        /* 🔹 Navbar */
+        .navbar {
+            background-color: #222 !important;
+            padding: 10px 20px;
+        }
+
+        .navbar-brand img {
+            height: 240px;  /* 3x the original height */
+            max-width: 750px;  /* Adjust proportionally */
+        }
+
+        /* 🔹 Navigation Links */
+        nav {
+            background: #222;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav a {
+            color: #28a745;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            background: #444;
+            border-radius: 5px;
+        }
+
+        /* 🔹 Form Styling */
+        .form-control, .form-select {
+            background: #555;
+            color: white;
+            border: 1px solid #666;
+        }
+
+        .form-control::placeholder {
+            color: #bbb;
+        }
+
+        /* 📌 Floating Full-Screen Button */
+        .fullscreen-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 60px;
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000; /* Ensure it stays on top */
+            transition: all 0.3s ease-in-out;
+        }
+
+        .fullscreen-btn:hover {
+            background-color: #218838;
+        }
+
+        /* ✅ Set a milk chocolate background for the Gantt chart */
+        #ganttChart {     
+            height: auto; /* ✅ Allow the height to adjust dynamically */
+            min-height: 500px; /* ✅ Set a reasonable minimum height */
+            max-height: 90vh; /* ✅ Prevent it from growing too large */
+            overflow-y: auto; /* ✅ Enable scrolling if needed */
+            background-color: rgba(128, 0, 128, 0.85) !important;  /* ✅ Deep Saturated Purple */
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 10px;
+        }
+
+        /* ✅ Ensure process step labels remain bold and readable */
+        .vis-labelset .vis-label {
+            font-weight: bold !important;
+            font-size: 14px !important;
+            color: white !important;
+            text-shadow: 1px 1px 2px black !important;
+            background-color: rgba(0, 0, 0, 0.3) !important; /* ✅ Dark overlay for better contrast */
+            padding: 4px !important;
+            border-radius: 4px !important;
+        }
+
+        /* ✅ Adjust Gantt Chart Items for better readability */
+        .vis-item {
+            min-width: 120px !important;
+            min-height: 40px !important; /* ✅ Ensure text fits */
+            line-height: 40px !important; /* ✅ Center text properly */
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px !important; /* ✅ Larger text */
+            color: white !important;
+            text-shadow: 2px 2px 4px black !important; /* ✅ Black outline for contrast */
+            overflow: visible !important; /* ✅ Prevent text from being clipped */
+            white-space: nowrap; /* ✅ Ensure text doesn't wrap to a new line */
+            border-radius: 5px !important;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important; /* ✅ Depth effect */
+        }
+
+           
+        .gantt-date-time {
+            font-weight: bold;
+            font-size: 18px;
+            color: white !important;
+            text-shadow: 1px 1px 2px black;
+            text-align: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }       
+        
+        /* ✅ Underline only crane-based process step labels on the Y-axis */
+        .vis-labelset .vis-label.crane-step {
+            text-decoration: underline !important;
+            font-weight: bold !important;
+        }
+
+
+                /* ✅ Ensure X-Axis Dates and Times are Bold and White */
+        .vis-time-axis .vis-text {
+            font-weight: bold !important;
+            color: white !important;
+            text-shadow: 1px 1px 2px black !important;
+            font-size: 14px !important;
+        }
+
+        @keyframes scrollText {
+            0% { transform: translateX(100%); }  
+            100% { transform: translateX(-100%); }  
+        }
+        
+        .gantt-item-content {
+            display: flex;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        /* ✅ Default scrolling animation */
+        .gantt-item-content span {
+            display: inline-block;
+            font-weight: bold;
+            color: white;
+            padding-right: 30px;
+            animation: scrollText 9s linear infinite;
+        }
+        
+        /* ✅ Stop animation on click */
+        .gantt-item-content span.paused {
+            animation-play-state: paused !important;
+        }
+               
+    </style>
+</head>
+<body>
+    
+    <!-- Navbar with Logo -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="https://danstoreacc.blob.core.windows.net/bamscontainer/Black%20Grey%20Simple%20Initial%20Logo%20(3).png" alt="Factory Logo">
+            </a>
+        </div>
+    </nav>
+
+    <!-- Navigation Links -->
+    <nav>
+        <a href="/orders">Orders</a>
+        <a href="/component_jobs">Component Jobs</a>
+        <a href="/manage_parts">Manage Parts</a>
+        <a href="/manage_customers">Manage Customers</a>
+        <a href="/jigs">Jigs</a>
+        <a href="/gantt_chart">🏭 Job Schedule</a>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Factory Schedule - Gantt Chart</h1>
+    
+        <!-- Gantt Job Creation Form -->
+        <div class="form-container">
+            <h4>Create a New Gantt Job</h4>
+            <form id="ganttJobForm">
+                <label class="form-label" for="componentJobSelect">Select Component Job:</label>
+                <select id="componentJobSelect" class="form-select" required>
+                    <option value="" disabled selected>Loading Component Jobs...</option>
+                </select>
+    
+                <label class="form-label mt-3" for="startTime">Start Time:</label>
+                <div class="input-group">
+                    <input type="datetime-local" id="startTime" class="form-control" required>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('startTime').showPicker()">
+                        📅
+                    </button>
+                </div>
+    
+                <!-- Anodising Tank Dropdown -->
+                <label class="form-label mt-3" for="anodisingTankSelect">Select Anodising Tank:</label>
+                <select id="anodisingTankSelect" class="form-select" required>
+                    <option value="Anodising 1A" selected>Anodising 1A</option>
+                    <option value="Anodising 1B">Anodising 1B</option>
+                    <option value="Anodising 2A">Anodising 2A</option>
+                    <option value="Anodising 2B">Anodising 2B</option>
+                </select>
+    
+                <!-- Rinse/Seal Route Dropdown -->
+                <label class="form-label mt-3" for="rinseSealRouteSelect">Select Rinse/Seal Route:</label>
+                <select id="rinseSealRouteSelect" class="form-select" required>
+                    <option value="odd_rinse_cold_seal_a" selected>Odd → Rinses 1, 3, 5 & Cold Seal A</option>
+                    <option value="even_rinse_cold_seal_b">Even → Rinses 2, 4, 6 & Cold Seal B</option>
+                </select>
+    
+                <button type="submit" class="btn btn-primary mt-3 w-100">Generate Gantt Job</button>
+            </form>
+        </div> <!-- ✅ Closing the Create Gantt Job Form Container -->
+    
+        <!-- 🗑️ Delete Gantt Job Form (Now Separate) -->
+        <div class="form-container">
+            <h4>🗑️ Delete a Gantt Job</h4>
+            <label class="form-label" for="deleteGanttJobSelect">Select a Gantt Job:</label>
+            <select id="deleteGanttJobSelect" class="form-select">
+                <option value="" disabled selected>Loading Gantt Jobs...</option>
+            </select>
+    
+            <button id="deleteGanttJobBtn" class="btn btn-danger mt-3 w-100">🗑️ Delete Selected Job</button>
+        </div>
+    
+        <!-- 🔄 Shift Gantt Job Form (Now Separate) -->
+        <div class="form-container">
+            <h4>Shift a Gantt Job</h4>
+            <label class="form-label" for="shiftGanttJobSelect">Select a Gantt Job:</label>
+            <select id="shiftGanttJobSelect" class="form-select">
+                <option value="" disabled selected>Loading Gantt Jobs...</option>
+            </select>
+    
+            <label class="form-label mt-3" for="shiftMinutes">Shift by (minutes):</label>
+            <input type="number" id="shiftMinutes" class="form-control" placeholder="Enter minutes (e.g., -30, +15)" required>
+    
+            <button id="shiftGanttJobBtn" class="btn btn-warning mt-3 w-100">Shift Selected Job</button>
+        </div>
+
+
+    
+        <!-- 📊 Gantt Chart Container -->
+        <div class="gantt-container mt-4">
+            <div id="ganttChart"></div>
+        </div>
+    </div>
+    
+    
+
+        <!-- Gantt Chart Container -->
+        <div id="ganttDateTimeTop" class="gantt-date-time"></div>
+        <div class="gantt-container mt-4">
+            <div id="ganttChart"></div>
+        </div>
+        <div id="ganttDateTimeBottom" class="gantt-date-time"></div>        
+    </div> 
+
+        <!-- 📌 Floating Full-Screen Toggle Button -->
+        <button id="fullscreenToggle" class="fullscreen-btn">⛶ Full Screen</button>
+
+    <script>
+
+        // ✅ Attach Click Event to Pause/Resume Scrolling Text
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("✅ Attaching Click Event for Scrolling Pause");
+
+            document.getElementById("ganttChart").addEventListener("click", function (event) {
+                let textElement = event.target.closest(".scrolling-text");
+                
+                if (textElement) {
+                    textElement.classList.toggle("paused");
+                    console.log("✅ Scrolling toggled:", textElement.classList.contains("paused") ? "Paused" : "Resumed");
+                }
+            });
+        });
+
+        // ✅ Define global variables for Gantt chart
+        var ganttChart; // Holds the Gantt chart instance
+        var ganttItems = new vis.DataSet(); // Stores Gantt chart items
+        var ganttGroups = new vis.DataSet(); // Stores process steps (Y-axis labels)
+        var ganttColors = [
+            "#f4a261",  // Muted Orange
+            "#2a9d8f",  // Soft Teal
+            "#e76f51",  // Warm Red
+            "#264653",  // Dark Cyan
+            "#8ab17d",  // Muted Green
+            "#e9c46a",  // Soft Yellow
+            "#9b5de5",  // Purple
+            "#d4a5a5",  // Soft Pink
+            "#6d597a",  // Dusty Plum
+            "#4a4e69"   // Greyish Blue
+        ];
+        
+
+        // ✅ Load Component Jobs into Dropdown
+        function loadComponentJobs() {
+            fetch('/get_component_jobs')  
+                .then(response => response.json())
+                .then(data => {
+                    const dropdown = document.getElementById("componentJobSelect");
+                    dropdown.innerHTML = ""; // Clear previous content
+    
+                    if (!Array.isArray(data) || data.length === 0) {
+                        dropdown.innerHTML = `<option value="" disabled selected>❌ No Jobs Available</option>`;
+                        console.error("⚠️ No jobs received from /get_component_jobs");
+                        return;
+                    }
+    
+                    dropdown.innerHTML = `<option value="" disabled selected>Select a Component Job</option>`;
+    
+                    data.forEach(job => {
+                        let loadNumber = job.load_number || 1;
+                        const option = document.createElement("option");
+                        option.value = `${job.component_job_id}-${loadNumber}`;
+                        option.textContent = `Job ${job.component_job_id} - Load ${loadNumber} - ${job.customer_name}`;
+                        dropdown.appendChild(option);
+                    });
+    
+                    // ✅ Auto-select first available job
+                    if (data.length > 0) {
+                        dropdown.selectedIndex = 1;
+                        dropdown.dispatchEvent(new Event('change')); // Trigger change event
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error loading component jobs:", error);
+                    document.getElementById("componentJobSelect").innerHTML = `<option value="" disabled selected>❌ Failed to Load Jobs</option>`;
+                });
+        }
+    
+        function loadGanttJobs() {
+            fetch('/gantt_data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("✅ Gantt Data Loaded:", data); // Debugging Log
+        
+                    const jobDropdowns = [
+                        document.getElementById("ganttJobSelect"),
+                        document.getElementById("deleteGanttJobSelect")
+                    ];
+        
+                    jobDropdowns.forEach(dropdown => {
+                        dropdown.innerHTML = `<option value="" disabled selected>Loading Gantt Jobs...</option>`;
+                    });
+        
+                    if (!data.jobs || !Array.isArray(data.jobs) || data.jobs.length === 0) {
+                        jobDropdowns.forEach(dropdown => {
+                            dropdown.innerHTML = `<option value="" disabled selected>❌ No Gantt Jobs Available</option>`;
+                        });
+                        return;
+                    }
+        
+                    // ✅ Populate the dropdowns with Gantt jobs
+                    data.jobs.forEach(job => {
+                        const option = document.createElement("option");
+                        option.value = job.component_job_id;
+                        option.textContent = `Job ${job.component_job_id} - Load ${job.load_number}`;
+                        
+                        jobDropdowns.forEach(dropdown => {
+                            dropdown.appendChild(option.cloneNode(true));
+                        });
+                    });
+        
+                    console.log("✅ Dropdowns Updated Successfully");
+        
+                })
+                .catch(error => console.error("❌ Error loading Gantt jobs:", error));
+        }        
+    
+        // ✅ Fetch Gantt Data with Start & End Times, Improved Rendering & Instant Scrolling
+        function fetchGanttData() {
+            fetch('/gantt_data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("✅ Received Gantt Data:", data);
+
+                    if (!data.jobs || !Array.isArray(data.jobs) || data.jobs.length === 0) {
+                        console.warn("⚠️ No valid Gantt data received.");
+                        return;
+                    }
+
+                    ganttItems.clear();
+                    ganttGroups.clear();
+
+                    let processSteps = Array.isArray(data.process_steps) ? data.process_steps : [];
+                    let jobColorMap = {};
+                    let addedItems = new Set();
+
+                    // ✅ Operation Emojis Mapping
+                    const operationEmojis = {
+                        "Polishing": "✨", "Blasting": "💨", "Brightening": "🔆", "Jigging": "👨‍🏭", "Loading": "📦",
+                        "Degrease": "🧼", "Water Rinse 1": "🚰", "Water Rinse 2": "🚰", "Water Rinse 3": "🚰", "Water Rinse 4": "🚰",
+                        "Caustic Etch": "⚗️", "Desmut": "🧪", "Anodising 1A": "⚡", "Anodising 1B": "⚡",
+                        "Anodising 2A": "⚡", "Anodising 2B": "⚡", "Water Rinse 5": "🚰", "Water Rinse 6": "🚰",
+                        "Cold Seal A": "🥶🦭", "Cold Seal B": "🥶🦭", "Boiling Water Seal": "♨️🦭",
+                        "Gold Dye": "🟡", "Black Dye": "⚫", "Unloading": "📤", "Off-line Dye": "🎨",
+                        "Hot Seal": "🔥🦭", "Drying": "💨", "Unjigging": "👨‍🏭", "Packing": "📦"
+                    };
+
+                    // ✅ Define crane-based steps (from Loading to Unloading)
+                    const craneBasedSteps = [
+                        "Loading", "Degrease", "Water Rinse 1", "Water Rinse 2", "Water Rinse 3", "Water Rinse 4",
+                        "Caustic Etch", "Desmut", "Anodising 1A", "Anodising 1B", "Anodising 2A", "Anodising 2B",
+                        "Water Rinse 5", "Water Rinse 6", "Cold Seal A", "Cold Seal B", "Water Rinse (8)",
+                        "Boiling Water Seal", "Gold Dye", "Black Dye", "Unloading"
+                    ];
+
+                    // ✅ Populate process step labels (Y-axis)
+                    processSteps.forEach((step, index) => {
+                        let isCraneStep = craneBasedSteps.includes(step);
+                        ganttGroups.add({
+                            id: index,
+                            content: `<span class="process-step-label ${isCraneStep ? 'crane-step' : ''}">${step.replace(/_/g, ' ')}</span>`
+                        });
+                    });
+
+                    // ✅ Batch collect all Gantt Items Before Adding to DOM
+                    let ganttItemData = [];
+
+                    data.jobs.forEach((job, index) => {
+                        let jobId = job.component_job_id;
+                        let loadNumber = job.load_number || index;
+
+                        if (!jobColorMap[jobId]) {
+                            jobColorMap[jobId] = ganttColors[index % ganttColors.length];
+                        }
+
+                        Object.entries(job.process_steps || {}).forEach(([step, timesArray]) => {
+                            if (!Array.isArray(timesArray)) return;
+
+                            timesArray.forEach(times => {
+                                if (!times.start || !times.end) return;
+
+                                let groupIndex = processSteps.indexOf(step);
+                                if (groupIndex === -1) return;
+
+                                let uniqueId = `${jobId}-load-${loadNumber}-${step}`;
+                                if (addedItems.has(uniqueId)) return;
+
+                                let operationEmoji = operationEmojis[step] || "⚙️";
+
+                                // ✅ Calculate Duration and Adjust Width Dynamically
+                                let startTime = new Date(times.start);
+                                let endTime = new Date(times.end);
+                                let durationMinutes = (endTime - startTime) / (1000 * 60); // Convert to minutes
+
+                                let minWidth = 60;  // ✅ Minimum box width for very short tasks
+                                let maxWidth = 300; // ✅ Maximum width for very long tasks
+                                let calculatedWidth = Math.min(maxWidth, Math.max(minWidth, durationMinutes * 2));
+
+                                let itemStyle = `
+                                    width: ${calculatedWidth}px !important; 
+                                    background-color: ${jobColorMap[jobId]}; 
+                                    color: white; 
+                                    padding: 5px; 
+                                    font-size: 12px;
+                                `;
+
+                                // ✅ Format Start and End Times
+                                let startTimeFormatted = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                let endTimeFormatted = endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                // ✅ Adjust Scrolling Speed Based on Task Duration
+                                let scrollSpeed = Math.max(10, durationMinutes / 5); // ⏳ Scale speed dynamically
+
+                                let content = `
+                                    <div class="scrolling-text" style="animation-duration: ${scrollSpeed}s;">
+                                        <span class="job-label">${job.customer_name} - Job ${jobId} - Load ${loadNumber} - ${step}${operationEmoji}</span> 
+                                        <span class="time-label">🕒 ${startTimeFormatted} → ${endTimeFormatted}</span>
+                                    </div>
+                                `;
+
+                                ganttItemData.push({
+                                    id: uniqueId,
+                                    group: groupIndex,
+                                    content: content,
+                                    start: startTime,
+                                    end: endTime,
+                                    style: itemStyle
+                                });
+
+                                addedItems.add(uniqueId);
+                            });
+                        });
+                    });
+
+                    // ✅ Batch add all items at once (Optimized)
+                    ganttItems.add(ganttItemData);
+
+                    // ✅ Render the Gantt Chart
+                    renderGanttChart();
+
+                    // ✅ Trigger scrolling animation instantly
+                    setTimeout(startScrolling, 100);
+                })
+                .catch(error => console.error("❌ Error fetching Gantt data:", error));
+        }
+
+        // ✅ Ensure scrolling animation starts instantly after data loads
+        function startScrolling() {
+            document.querySelectorAll('.scrolling-text').forEach(el => {
+                el.style.animation = "scrollText 5s linear infinite";
+            });
+        }
+
+    
+        // ✅ Ensure Gantt Chart Updates with Dual X-Axis
+        function renderGanttChart() {
+            if (ganttChart) ganttChart.destroy();
+            
+            const container = document.getElementById("ganttChart");
+            
+            const options = { 
+                stack: true, 
+                showCurrentTime: true, 
+                zoomable: true,
+                showMajorLabels: true, // ✅ Show major time labels (e.g., dates)
+                showMinorLabels: true, // ✅ Show minor time labels (e.g., hours)
+                orientation: { axis: "both" } // ✅ Enables X-axis labels at BOTH top & bottom
+            };
+
+            ganttChart = new vis.Timeline(container, ganttItems, ganttGroups, options);
+        }
+    
+        // ✅ Adjust Job Start Time for End-of-Day Constraints
+        function checkEndOfDay(jobStartTime) {
+            let workEndTime = new Date(jobStartTime);
+            workEndTime.setHours(17, 0, 0, 0); // 5 PM
+    
+            if (jobStartTime > workEndTime) {
+                let nextDayStart = new Date(jobStartTime);
+                nextDayStart.setDate(jobStartTime.getDate() + 1);
+                nextDayStart.setHours(8, 0, 0, 0); // 8 AM
+                return nextDayStart;
+            }
+            return jobStartTime;
+        }
+    
+        function handleGanttJobSubmission(event) {
+            event.preventDefault(); // ✅ Prevent page reload
+        
+            const selectedJob = document.getElementById("componentJobSelect").value;
+            let startTime = document.getElementById("startTime").value;
+            const anodisingTank = document.getElementById("anodisingTankSelect").value;
+            const rinseSealRoute = document.getElementById("rinseSealRouteSelect").value;
+        
+            if (!selectedJob || !startTime) {
+                alert("⚠️ Please select a Component Job and provide a Start Time.");
+                return;
+            }
+        
+            startTime = checkEndOfDay(new Date(startTime));
+        
+            const requestData = {
+                component_job_id: parseInt(selectedJob, 10),
+                start_time: new Date(startTime).toISOString().slice(0, 16), // ✅ Fixed: Changed semicolon to a comma
+                anodising_tank: anodisingTank,
+                rinse_seal_route: rinseSealRoute
+            };            
+        
+            fetch('/gantt_job', {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert("✅ Gantt Job created successfully!");
+                    fetchGanttData(); // ✅ Refresh the chart
+                } else {
+                    alert(`❌ Error creating Gantt Job: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error("🔴 Fetch Error:", error);
+                alert("❌ Failed to create Gantt Job. Check console for details.");
+            });
+        }
+        
+        // ✅ Ensure function is attached properly
+        document.getElementById("ganttJobForm").addEventListener("submit", handleGanttJobSubmission);        
+    
+            // ✅ Ensure functions run AFTER definitions
+        document.addEventListener("DOMContentLoaded", function () {
+            loadComponentJobs();
+            fetchGanttData();
+            loadGanttJobs();
+
+            // ✅ Reusable Function to Update Dropdowns
+            function refreshDropdowns() {
+                fetchGanttData();  // ✅ Refresh Gantt Chart
+                loadGanttJobs();   // ✅ Reload dropdown options dynamically
+            }
+
+            // ✅ Fetch available Gantt Jobs for deletion
+        function loadGanttJobs() {
+            fetch('/api/get_gantt_jobs')
+                .then(response => response.json())
+                .then(data => {
+                    const dropdown = document.getElementById("deleteGanttJobSelect");
+                    dropdown.innerHTML = ""; // Clear previous content
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        dropdown.innerHTML = `<option value="" disabled selected>❌ No Gantt Jobs Available</option>`;
+                        console.warn("⚠️ No Gantt Jobs received.");
+                        return;
+                    }
+
+                    dropdown.innerHTML = `<option value="" disabled selected>Select a Gantt Job</option>`;
+
+                    data.forEach(job => {
+                        const option = document.createElement("option");
+                        option.value = job.gantt_job_id;
+                        option.textContent = `Job ${job.gantt_job_id} - Load ${job.load_number} - ${job.customer_name}`;
+                        dropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("❌ Error loading Gantt Jobs:", error);
+                    document.getElementById("deleteGanttJobSelect").innerHTML = `<option value="" disabled selected>❌ Failed to Load Jobs</option>`;
+                });
+        }
+
+
+        // ✅ Handle Gantt Job Deletion
+        function deleteGanttJob() {
+            const dropdown = document.getElementById("deleteGanttJobSelect");
+            const selectedJobId = dropdown.value;
+
+            if (!selectedJobId || selectedJobId === "No Gantt Jobs Available") {
+                alert("⚠️ Please select a valid Gantt Job to delete.");
+                return;
+            }
+
+            // Confirm with the user before deletion
+            if (!confirm(`🗑️ Are you sure you want to delete Gantt Job ${selectedJobId}? This action cannot be undone!`)) {
+                return;
+            }
+
+            fetch(`/api/delete_gantt_job/${selectedJobId}`, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ Gantt Job ${selectedJobId} deleted successfully.`);
+                    dropdown.selectedIndex = 0; // ✅ Reset selection after delete
+                    loadGanttJobs();  // Refresh delete dropdown
+                    fetchGanttData(); // Refresh Gantt chart
+                } else {
+                    alert(`❌ Failed to delete Gantt Job: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error("❌ Error deleting Gantt Job:", error);
+                alert("❌ An error occurred while deleting the Gantt Job.");
+            });
+        }
+
+        // ✅ Prevent "Delete Gantt Job" from interfering with other forms
+        document.getElementById("ganttJobForm").addEventListener("submit", function () {
+            document.getElementById("deleteGanttJobSelect").selectedIndex = -1; // ✅ Reset selection to avoid validation interference
+        });
+
+        // ✅ Attach event listener to Delete button
+        document.getElementById("deleteGanttJobBtn").addEventListener("click", deleteGanttJob);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadGanttJobs();
+            fetchGanttData();
+        
+            document.getElementById("shiftGanttJobBtn").addEventListener("click", shiftGanttJob);
+        
+            // ✅ Add Zoom Controls UI
+            const zoomControls = document.createElement("div");
+            zoomControls.innerHTML = `
+                <div id="zoomControls" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+                    <button id="zoomInBtn" style="margin: 5px; padding: 10px; font-size: 16px;">🔍 Zoom In</button>
+                    <button id="zoomOutBtn" style="margin: 5px; padding: 10px; font-size: 16px;">🔎 Zoom Out</button>
+                </div>
+            `;
+            document.body.appendChild(zoomControls);
+        
+            document.getElementById("zoomInBtn").addEventListener("click", zoomInGantt);
+            document.getElementById("zoomOutBtn").addEventListener("click", zoomOutGantt);
+        });
+        
+        // ✅ Full-Screen Toggle Function (Now with Logging & Safety Checks)
+        function toggleFullScreen() {
+            console.log("⛶ Attempting Fullscreen Toggle...");
+
+            const ganttContainer = document.getElementById("ganttChart");
+            if (!ganttContainer) {
+                console.error("❌ Fullscreen Error: Gantt chart container not found!");
+                return;
+            }
+
+            if (!document.fullscreenElement) {
+                if (ganttContainer.requestFullscreen) {
+                    ganttContainer.requestFullscreen().catch(err => console.error("❌ Fullscreen API Error:", err));
+                } else if (ganttContainer.mozRequestFullScreen) { // Firefox
+                    ganttContainer.mozRequestFullScreen();
+                } else if (ganttContainer.webkitRequestFullscreen) { // Chrome, Safari, Opera
+                    ganttContainer.webkitRequestFullscreen();
+                } else if (ganttContainer.msRequestFullscreen) { // IE/Edge
+                    ganttContainer.msRequestFullscreen();
+                } else {
+                    console.error("❌ Fullscreen API not supported!");
+                }
+            } else {
+                document.exitFullscreen().catch(err => console.error("❌ Error exiting fullscreen:", err));
+            }
+        }
+
+        // ✅ Attach Event Listener AFTER DOM Load
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("✅ DOM Loaded - Attaching Fullscreen Button Event");
+            const fullscreenBtn = document.getElementById("fullscreenToggle");
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener("click", toggleFullScreen);
+                console.log("✅ Fullscreen button event attached");
+            } else {
+                console.error("❌ Fullscreen button NOT found in DOM.");
+            }
+        });
+    
+
+        // ✅ Handle Gantt Job Shift
+        function shiftGanttJob() {
+            const selectedJob = document.getElementById("shiftGanttJobSelect").value;
+            const shiftMinutes = parseInt(document.getElementById("shiftMinutes").value, 10);
+
+            if (!selectedJob) {
+                alert("⚠️ Please select a Gantt Job.");
+                return;
+            }
+            if (isNaN(shiftMinutes) || shiftMinutes === 0) {
+                alert("⚠️ Please enter a valid number of minutes (e.g., -30, +15).");
+                return;
+            }
+
+            fetch(`/api/shift_gantt_job/${selectedJob}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ shift_minutes: shiftMinutes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ Gantt Job shifted by ${shiftMinutes} minutes!`);
+                    fetchGanttData();  // Reload Gantt Chart
+                } else {
+                    alert(`❌ Error shifting job: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error("❌ Failed to shift Gantt Job:", error);
+                alert("❌ Server error while shifting job.");
+            });
+}
+                           
+        });            
+
+    </script>
+    
+    
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Jobs</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        /* 🏭 Background & Typography */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;  /* Dark charcoal */
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ✅ Header Styling */
+        header {
+            background-color: #222;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        header img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        /* ✅ Navigation Bar */
+        nav {
+            background: #222;
+            text-align: center;
+            padding: 12px;
+        }
+
+        nav a {
+            color: #28a745;
+            text-decoration: none;
+            padding: 12px 18px;
+            font-weight: bold;
+            display: inline-block;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+
+        nav a:hover {
+            background: #444;
+        }
+
+        /* ✅ Form Container */
+        .filter-section {
+            background: #444;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 95%;
+            box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+        }
+
+        /* ✅ Styled Form Elements */
+        .form-control, .form-select {
+            background: #555;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .form-control::placeholder {
+            color: #bbb;
+        }
+
+        .form-select:hover,
+        .form-control:hover {
+            border-color: #28a745;
+        }
+
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+
+        /* ✅ Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        /* ✅ Table Headers */
+        thead th {
+            background-color: #28a745;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        /* ✅ Alternating Row Colors */
+        tbody tr:nth-child(odd) {
+            background-color: #3a3a3a;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #2b2b2b;
+        }
+
+        /* ✅ Table Cell Styling */
+        td {
+            padding: 12px;
+            color: white;
+            border-bottom: 1px solid #444;
+        }
+
+        /* ✅ Row Hover Effect */
+        tbody tr:hover {
+            background-color: #444;
+        }
+
+        /* ✅ Section Headings */
+        h1, h2, h3, h4, h5, h6 {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ✅ Header with Logo -->
+    <header>
+        <img src="https://danstoreacc.blob.core.windows.net/bamscontainer/Black%20Grey%20Simple%20Initial%20Logo%20(3).png" alt="Anodising.net Logo">
+    </header>
+
+    <!-- ✅ Navigation Bar -->
+    <nav>
+        <a href="{{ url_for('orders') }}">Create Orders</a>
+        <a href="{{ url_for('gantt_chart') }}">🏭 Job Schedule</a>
+        <a href="{{ url_for('manage_customers') }}">Manage Customers</a>
+        <a href="{{ url_for('manage_parts') }}">Manage Parts</a>
+        <a href="{{ url_for('jigs') }}">View Jigs</a>
+    </nav>
+
+    <!-- 🔎 FILTERS SECTION -->
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('component_jobs') }}">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" class="form-control">
+
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" class="form-control">
+
+            <label for="customer_id">Customer:</label>
+            <select id="customer_id" name="customer_id" class="form-select">
+                <option value="">All Customers</option>
+                {% for customer in customers %}
+                    <option value="{{ customer.customer_id }}">{{ customer.customer_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="jig_type">Jig Type:</label>
+            <select id="jig_type" name="jig_type" class="form-select">
+                <option value="">All Jigs</option>
+                {% for jig in jigs %}
+                    <option value="{{ jig }}">{{ jig }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn-primary">Search</button>
+        </form>
+    </div>
+
+    <!-- 🛠️ COMPONENT JOBS TABLE -->
+    {% if grouped_jobs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>PO Number</th>
+                <th>Part Number</th>
+                <th>Description</th>
+                <th>Jig Type</th>
+                <th>Quantity</th>
+                <th>Unit Price (£)</th>
+                <th>Jigging Duration (mins)</th>
+                <th>Anodising Duration (mins)</th>
+                <th>View Job</th>
+            </tr>
+        </thead>    
+        <tbody>
+            {% for (customer_name, purchase_order_number), jobs in grouped_jobs.items() %}
+                {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.component_job_id }}</td>
+                        <td>{{ customer_name }}</td>
+                        <td>{{ purchase_order_number }}</td>
+                        <td>{{ job.part_number }}</td>
+                        <td>{{ job.part_description }}</td>
+                        <td>{{ job.jig_type }}</td>
+
+                        <td contenteditable="true" class="editable" data-id="{{ job.order_line_id }}" data-field="quantity">
+                            {{ job.quantity }}
+                        </td>
+                        <td contenteditable="true" class="editable" data-id="{{ job.order_line_id }}" data-field="unit_price">
+                            {{ job.unit_price }}
+                        </td>
+
+                        <td>{{ job.jigging_duration_per_load }} mins</td>
+                        <td>{{ job.anodising_duration or "N/A" }} mins</td>
+
+                        <td>
+                            <a href="javascript:void(0);" onclick="openJobDetails('{{ job.component_job_id }}')" class="job-link">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>    
+    </table>
+    {% else %}
+    <p>No component jobs found.</p>
+    {% endif %}
+
+</body>
+</html>
+
+
+<!-- 🔥 AJAX for Inline Editing (Quantity & Unit Price) -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.editable').forEach(cell => {
+            cell.addEventListener('blur', () => {
+                const orderLineId = cell.getAttribute('data-id');
+                const field = cell.getAttribute('data-field');
+                const newValue = cell.innerText.trim();
+
+                fetch(`/update_orderline/${orderLineId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ field, newValue })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert("Update failed: " + data.error);
+                        location.reload(); // Reload if failed
+                    }
+                })
+                .catch(error => {
+                    console.error("Error updating:", error);
+                    location.reload();
+                });
+            });
+        });
+    });
+
+
+    function openJobDetails(componentJobId) {
+        fetch(`/component_job_details/${componentJobId}`)
+            .then(response => response.json())
+            .then(data => {
+                const jobWindow = window.open("", "_blank");
+    
+                // Destructure required fields from the fetched data
+                const {
+                    part_number = "N/A",
+                    part_description = "N/A",
+                    purchase_order_number = "N/A",
+                    component_job_id = "N/A",
+                    customer_name = "N/A",
+                    jig_type = "N/A",
+                    required_jigs = "N/A",
+                    upj = 0, // Units per jig
+                    jpl = 0, // Jigs per load
+                    loads_required: loadsRequired = 1,
+                    units_per_load: unitsPerLoad = 0,
+                    quantity_of_final_load: quantityOfFinalLoad = 0,
+                    quantity = 0,
+                    voltage = "N/A", // Voltage
+                    jig_image_url: jigImageUrl = '', // Jig image URL
+                    part_image_url: partImageUrl = '', // Part image URL
+                    operations = [], // Main operations
+                    load_independent_operations = [], // Pre-jigging operations (e.g., polishing, blasting)
+                } = data;
+    
+                // Format voltage for display
+                const voltageDisplay = voltage !== "N/A" ? `${voltage}V` : "N/A";
+    
+                // Build HTML content
+                let jobDetailsHTML = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Job Details</title>
+                        <style>
+                            /* Portrait mode and small margins */
+                            @page {
+                                size: A4 portrait;
+                                margin: 0.5cm;
+                            }
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .header {
+                                text-align: center;
+                                font-size: 14px;
+                                font-weight: bold;
+                                margin-bottom: 10px;
+                                padding: 5px;
+                                border-bottom: 2px solid #888;
+                            }
+                            .container {
+                                padding: 1cm;
+                            }
+                            .details-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-bottom: 20px;
+                            }
+                            .details-table td {
+                                border: 1px solid #888;
+                                padding: 8px;
+                                text-align: left;
+                            }
+                            .details-table tr:first-child td {
+                                font-weight: bold;
+                            }
+                           .images-container {
+                                display: flex;
+                                justify-content: center; /* Center images */
+                                align-items: center;
+                                margin-top: 10px;
+                                gap: 20px; /* Space between images */
+                                flex-wrap: nowrap;
+                                page-break-inside: avoid; /* Ensure images do not split across pages */
+                            }
+
+                            .jig-image, .part-image {
+                                max-width: 100%;  /* Use full width */
+                                max-height: 100vh; /* Use full viewport height */
+                                object-fit: contain; /* Maintain aspect ratio */
+                            }
+
+                            @media print {
+                                .images-container {
+                                    page-break-inside: avoid;
+                                }
+                            }
+                            .operations-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 20px;
+                            }
+                            .operations-table th,
+                            .operations-table td {
+                                border: 1px solid #888;
+                                padding: 8px;
+                                text-align: left;
+                            }
+                            .operations-table th {
+                                background-color: #f2f2f2;
+                            }
+                            .page-break {
+                                page-break-before: always;
+                            }
+                                .operations-table td, 
+                            .operations-table th {
+                                border: 1px solid #888;  /* Ensure all cells have a border */
+                                border-right: 1px solid #888; /* Explicitly force right border */
+                                text-align: left;
+                                padding: 8px;
+                            }
+
+                            .operations-table tr td:last-child {
+                                border-right: 1px solid #888 !important; /* Force rightmost column to have a border */
+                            }
+                            .initials-placeholder {
+                                color: #acb5ae; 
+                                font-style: italic;
+                                font-weight: bold; /* Embolden the text */
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <!-- Header Section -->
+                        <div class="header">
+                            <p>Customer: ${customer_name}</p>
+                            <p>Job ID: ${component_job_id}</p>
+                        </div>
+    
+                        <!-- Main Content -->
+                        <div class="container">
+                            <!-- Details Table -->
+                            <div>
+                                <table class="details-table">
+                                    <tr><td>Part Number</td><td>${part_number}</td></tr>
+                                    <tr><td>Part Description</td><td>${part_description}</td></tr>
+                                    <tr><td>Purchase Order Number</td><td>${purchase_order_number}</td></tr>
+                                    <tr><td>Jig Type</td><td>${jig_type}</td></tr>
+                                    <tr><td>Required Jigs</td><td>${required_jigs}</td></tr>
+                                    <tr><td>Quantity</td><td>${quantity}</td></tr>
+                                    <tr><td>Units per Jig</td><td>${upj}</td></tr>
+                                    <tr><td>Jigs per Load</td><td>${jpl}</td></tr>
+                                    <tr><td>Loads Required</td><td>${loadsRequired}</td></tr>
+                                </table>
+                            </div>
+    
+                            <!-- Images -->
+                            <div class="images-container">
+                                ${jigImageUrl ? `<img src="${jigImageUrl}" alt="Jig Image" class="jig-image" />` : ''}
+                                ${partImageUrl ? `<img src="${partImageUrl}" alt="Part Image" class="part-image" />` : ''}
+                            </div>
+                        </div>
+                `;
+    
+                // Load-Independent Operations (Polishing, Blasting)
+                if (load_independent_operations.length > 0) {
+                    jobDetailsHTML += `
+                        <h3>Pre-Jigging Operations</h3>
+                        <p>Customer: ${customer_name} | Job ID: ${component_job_id} | Part Number: ${part_number} | Part Description: ${part_description}</p>
+                        <table class="operations-table">
+                            <thead>
+                                <tr>
+                                    <th>Operation Name</th>
+                                    <th>Duration (mins)</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${load_independent_operations.map(op => `
+                                    <tr>
+                                        <td>${op.operation}</td>
+                                        <td>${op.duration}</td>
+                                        <td>${op.notes}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+    
+            // Main Operations (1 page per load)
+            for (let loadNumber = 1; loadNumber <= loadsRequired; loadNumber++) {
+                const isFinalLoad = loadNumber === loadsRequired;
+
+                jobDetailsHTML += `
+                    <div class="page-break">
+                        <h3>Main Operations (Load ${loadNumber})</h3>
+                        <p>Customer: ${customer_name} | Job ID: ${component_job_id} | Part Number: ${part_number} | Part Description: ${part_description}</p>
+                        <table class="operations-table">
+                            <thead>
+                                <tr>
+                                    <th>Operation Name</th>
+                                    <th>Duration (mins)</th>
+                                    <th>Load ${loadNumber}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            ${
+                                operations.length > 0
+                                ? operations.map(op => {
+                                    const operationName = op.operation.toLowerCase();
+                                    const isAnodising = operationName === 'anodising';
+                                    const isJiggingUnjiggingPacking = ['jigging', 'unjigging', 'packing'].includes(operationName);
+                                  
+                                    // 🎯 Set placeholders dynamically
+                                    let placeholder = `DD/MM & Initial(s)`;
+
+                                    if (isAnodising) {
+                                        placeholder += `<br>DC⚡: _____ A, 🌡: _____ °C, ⏱️: _____ mins`;
+                                    } else if (isJiggingUnjiggingPacking) {
+                                        placeholder += isFinalLoad
+                                            ? `<br>Final Load Qty: ${quantityOfFinalLoad} (if false, <del>strike</del> and specify true Qty: ___)`
+                                            : `<br>Units/Load: ${unitsPerLoad} (if false, <del>strike</del> and specify true Qty: ___)`;
+                                    }
+
+                                    return `
+                                    <tr>
+                                        <td>${op.operation}</td>
+                                        <td>${op.duration}</td>
+                                        <td class="initials-placeholder">${placeholder}</td>
+                                    </tr>
+                                `;
+                                }).join('')                                                   
+                                    : `<tr><td colspan="3" style="text-align: center;">No operations available.</td></tr>`
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+    
+                jobDetailsHTML += `</body></html>`;
+                jobWindow.document.write(jobDetailsHTML);
+                jobWindow.document.close();
+            })
+            .catch(error => {
+                console.error("Error fetching job details:", error);
+                alert("Failed to load component job details. Please try again later.");
+            });
+    }
+    
+</script>
+
+</body>
+</html>

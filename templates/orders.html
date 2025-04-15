@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create/View Orders</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Inline Styles (For Quick Customization) -->
+    <!-- Inline Styles (For Quick Customization) -->
+    <style>
+        /* 🏭 Background & Typography */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;  /* Dark charcoal */
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ✅ Header Styling */
+        header {
+            background-color: #222;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        header img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        /* ✅ Navigation Bar */
+        nav {
+            background: #222;
+            text-align: center;
+            padding: 12px;
+        }
+
+        nav a {
+            color: #28a745;
+            text-decoration: none;
+            padding: 12px 18px;
+            font-weight: bold;
+            display: inline-block;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+
+        nav a:hover {
+            background: #444;
+        }
+
+        /* ✅ Form Container */
+        .filter-section, .order-divider {
+            background: #444;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 95%;
+            box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+        }
+
+        /* ✅ Styled Form Elements */
+        .form-control, .form-select, input, select {
+            background: #555;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-control::placeholder {
+            color: #bbb;
+        }
+
+        .form-select:hover,
+        .form-control:hover,
+        input:hover,
+        select:hover {
+            border-color: #28a745;
+        }
+
+        /* ✅ Button Styling */
+        .btn-primary, #addLineButton, #createOrderButton {
+            background-color: #28a745;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn-primary:hover, #addLineButton:hover, #createOrderButton:hover {
+            background-color: #218838;
+        }
+
+        /* ✅ Section Headings */
+        h1, h2, h3, h4, h5, h6 {
+            color: #28a745;
+        }
+
+        /* ✅ Fieldset Styling */
+        fieldset {
+            border: 1px solid #666;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #444;
+        }
+
+        legend {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* ✅ Polishing & Advanced Fields */
+        .polishing-options, .advanced-fields {
+            background: #555;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .radio-inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* ✅ Fixed Buttons */
+        .fixed-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+
+
+</head>
+<body>
+
+    <!-- ✅ Header with Logo -->
+    <header>
+        <img src="https://danstoreacc.blob.core.windows.net/bamscontainer/Black%20Grey%20Simple%20Initial%20Logo%20(3).png" alt="Anodising.net Logo">
+    </header>
+
+    <!-- ✅ Navigation Bar -->
+    <nav>
+        <a href="/orders">Orders</a>
+        <a href="/component_jobs">Component Jobs</a>
+        <a href="/manage_parts">Manage Parts</a>
+        <a href="/manage_customers">Manage Customers</a>
+        <a href="/jigs">Jigs</a>
+        <a href="/gantt_chart">🏭 Job Schedule</a>
+    </nav>
+</body>
+</html>
+
+<!-- Page Header -->
+<h1>Create a New Order</h1>
+
+<!-- Flash Messages Section -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Order Form Start -->
+<form id="orderForm" action="{{ url_for('orders') }}" method="post" enctype="multipart/form-data">
+
+</body>
+</html>
+<!-- Order Form Start -->
+<form id="orderForm" action="{{ url_for('orders') }}" method="post" enctype="multipart/form-data">
+        <fieldset class="order-divider">
+            <legend>Order Details</legend>
+
+           <!-- Customer and Order Details Fieldset -->
+           <fieldset>
+            <legend>Customer and Order Details</legend>
+        
+            <!-- Customer Name -->
+            <label for="customer_name">Customer Name:</label>
+            <select id="customer_name" name="customer_id" required>
+                <option value="" disabled {% if not customer_and_order_details.get('customer_id') %} selected {% endif %}>
+                    Select a Customer
+                </option>
+                {% for customer in customers %}
+                    <option value="{{ customer['customer_id'] }}"
+                        {% if customer_and_order_details.get('customer_id', '') == customer['customer_id'] %} selected {% endif %}>
+                        {{ customer['customer_name'] }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <!-- Purchase Order Number -->
+            <label for="purchase_order_number">Purchase Order Number:</label>
+            <input type="text" id="purchase_order_number" name="purchase_order_number"
+                placeholder="Enter Purchase Order Number" required
+                value="{{ customer_and_order_details.get('purchase_order_number', '') }}">
+
+            <!-- Date of Arrival -->
+            <label for="date_of_arrival">Date of Arrival:</label>
+            <input type="date" id="date_of_arrival" name="date_of_arrival" required
+                value="{{ customer_and_order_details.get('date_of_arrival', '') }}">
+
+            <!-- Collection Method -->
+            <label for="collection_method">Collection Method:</label>
+            <select id="collection_method" name="collection_method" required>
+                <option value="Customer Collect"
+                    {% if customer_and_order_details.get('collection_method') == 'Customer Collect' %} selected {% endif %}>
+                    Customer Collect
+                </option>
+                <option value="Courier"
+                    {% if customer_and_order_details.get('collection_method') == 'Courier' %} selected {% endif %}>
+                    Courier
+                </option>
+            </select>
+        </fieldset>        
+
+        <div class="fixed-buttons">
+            <button type="button" id="addLineButton" onclick="addAnotherLine()">Add Another Line</button>
+
+            <button type="submit" id="createOrderButton">Create Order</button>
+        </div>          
+
+        <!-- Parts Section -->
+        <fieldset id="parts-section">
+            <legend>Parts</legend>
+
+            <!-- Part Entry Template -->
+            <div class="part-entry">
+                <fieldset class="line-section">
+                    <legend>Line</legend>
+
+                    <!-- Quantity Input -->
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity[]" min="1" placeholder="Quantity" required>
+
+                    <!-- Price Inputs -->
+                    <label for="unit_price">Unit Price (£):</label>
+                    <input type="number" id="unit_price" name="unit_price[]" step="0.01" min="0" placeholder="Enter unit price">
+                    
+                    <span class="or-divider">OR</span>
+                    
+                    <label for="lot_price">Lot Price (£):</label>
+                    <input type="number" id="lot_price" name="lot_price[]" step="0.01" min="0" placeholder="Enter lot price">
+
+
+                    <!-- Existing / New Part Details Section -->
+                    <div class="part-selection-section">
+                        <label for="use_existing_part">Select Part:</label>
+                        <select id="use_existing_part" name="use_existing_part[]" class="part-selection-dropdown" required>
+                            <!-- Default Option -->
+                            <option value="No" selected>No (Create New Part)</option>
+                            <!-- Dynamically Populated Existing Parts -->
+                            {% for part in customer_parts %}
+                                <option value="{{ part.part_number }}">
+                                    {{ part.part_number }} - {{ part.part_description }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>                    
+                    
+
+            <!-- New Part Details Section -->
+            <div class="new-part-wrapper" aria-hidden="false" style="display: block;">
+                <fieldset class="new-part-section">
+                    <legend>New Part Details</legend>
+                        <label for="part_number_new">New Part Number:</label>
+                        <input type="text" id="part_number_new" name="part_number_new[]" placeholder="New Part Number">
+                        
+                        <label for="part_description">Part Description:</label>
+                        <input type="text" id="part_description" name="part_description[]" placeholder="Part Description">                                   
+
+                        <label for="anodising_duration">Anodising Duration (minutes):</label>
+                        <select id="anodising_duration" name="anodising_duration[]">
+                            {% for i in range(5, 95, 5) %}
+                                <option value="{{ i }}" {% if i == 30 %} selected {% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>                        
+                        
+                        <label for="voltage">Voltage (V):</label>
+                        <select id="voltage" name="voltage[]" required>
+                            <option value="12.5" {% if request.form.get('voltage', '16') == '12.5' %} selected {% endif %}>12.5</option>
+                            {% for i in range(13, 23) %}
+                                <option value="{{ i }}" {% if request.form.get('voltage', '16') == i|string %} selected {% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>                        
+                        
+                        <label for="etch">Etch:</label>
+                        <select id="etch" name="etch[]">
+                            <option value="0.0">No etch</option>
+                            <option value="1.0">Strip Etch (for AA10)</option>
+                            <option value="2.5">Strip Etch (for AA25)</option>
+                            {% for i in [2.5, 3.0, 4.0, 5.0, 6.0, 7.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0] %}
+                                <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>                        
+                        
+                        <label for="sealing">Sealing:</label>
+                        <select id="sealing" name="sealing[]" required>
+                            <option value="No sealing">No sealing</option>
+                            <option value="Cold Seal 15 min">Cold Seal (15 min)</option>
+                            <option value="Cold Seal 30 min" selected>Cold Seal (30 min)</option>
+                            <option value="Hot Seal">Hot Seal</option>
+                            <option value="Boiling Water Seal">Boiling Water Seal</option>
+                        </select>                                              
+
+                                                <!-- Dye Selection -->
+                            <label for="dye">Dye:</label>
+                            <select id="dye" name="dye[]" required>
+                                <option value="Default">Default (un-dyed)</option>
+                                <option value="Black">Black</option>
+                                <option value="Gold">Gold</option>
+                                <option value="Premium Black">Premium Black</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Turquoise">Turquoise</option>
+                                <option value="Stainless">Stainless</option>
+                                <option value="Green">Green</option>
+                                <option value="Bronze">Bronze</option>
+                                <option value="Red">Red</option>
+                                <option value="Orange">Orange</option>
+                            </select>
+
+                            <!-- Brightening Selection -->
+                            <label for="brightening">Brightening (minutes):</label>
+                            <select id="brightening" name="brightening[]">
+                                <option value="No" selected>No</option>
+                                {% for i in range(1, 21) %}
+                                    <option value="{{ i / 2.0 }}">{{ i / 2.0 }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="double_and_etch">Double and Etch:</label>
+                            <select id="double_and_etch" name="double_and_etch[]" required>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+
+                            <!-- Blasting Selection -->
+                            <label for="blasting">Blasting:</label>
+                            <select id="blasting" name="blasting[]" required>
+                                <option value="No" selected>No</option>
+                                <option value="7 Grit">7 Grit</option>
+                                <option value="13 Grit">13 Grit</option>
+                            </select>
+
+                            <!-- Toggle Anodising Options -->
+                            <label for="anodising_required">Anodising Required?</label>
+                            <select id="anodising_required" name="anodising_required[]" class="anodising-required" required>
+                                <option value="Anodising is required">Anodising is required</option>
+                                <option value="No anodic treatment required">No anodic treatment required</option>
+                                <option value="Strip Only (for AA10)">Strip Only (for AA10)</option>
+                                <option value="Strip Only (for AA25)">Strip Only (for AA25)</option>
+                            </select>
+                            
+
+                            <!-- Jig Type Selection -->
+                            <label for="jig_type">Select Jig:</label>
+                            <select id="jig_type" name="jig_type[]" required>
+                                <!-- Default Option -->
+                                <option value="See supervisor" selected>See Supervisor</option>
+                                <!-- Jig Options Populated Dynamically -->
+                                {% for jig in jigs %}
+                                    <option value="{{ jig['jig_type'] }}" {% if jig['jig_type'] == part_jig_type %} selected {% endif %}>
+                                        {{ jig['jig_type'] }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+
+                        <label for="polishing-no">Polishing:</label>
+                        <div class="radio-inline">
+                            <input type="radio" id="polishing-no" name="polishing[]" value="No" checked>
+                            <label for="polishing-no">No</label>
+                        
+                            <input type="radio" id="polishing-yes" name="polishing[]" value="Yes">
+                            <label for="polishing-yes">Yes</label>
+                        </div>
+                        
+
+                    <!-- Polishing Options (Hidden by Default) -->
+                        <div class="polishing-options" style="display: none;">
+                            <fieldset>
+                                <legend>Polishing Steps</legend>
+                                <div id="polishing-steps-container"></div>
+                                <!-- Button to add a new equipment method (up to 3 steps) -->
+                                <button type="button" id="addPolishingStepButton">Add Equipment Method</button>
+                            </fieldset>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <label for="enable-advanced-no">Enable Custom Options?</label>
+                        <div class="radio-inline">
+                            <input type="radio" id="enable-advanced-no" name="enable_advanced" value="No" checked>
+                            <label for="enable-advanced-no">No</label>
+                            <input type="radio" id="enable-advanced-yes" name="enable_advanced" value="Yes">
+                            <label for="enable-advanced-yes">Yes</label>
+                        </div>
+
+                        <!-- Advanced Fields -->
+                        <div class="advanced-fields" style="display: none;">
+                            <label for="custom_upj">Custom Units Per Jig:</label>
+                            <input type="number" id="custom_upj" name="custom_upj[]" placeholder="Enter UPJ" disabled>
+
+                            <label for="custom_jpl">Custom Jigs Per Load:</label>
+                            <input type="number" id="custom_jpl" name="custom_jpl[]" placeholder="Enter JPL" disabled>
+
+                            <label for="custom_mpj">Custom Minutes Per Jig:</label>
+                            <input type="number" id="custom_mpj" name="custom_mpj[]" placeholder="Enter MPJ" disabled>
+                </fieldset>
+            </div>
+  
+<!-- Updated JavaScript Section -->
+<script>
+// Section 1: Global Initializations and Setup
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded. Starting initializations...");
+
+    const partsSection = document.getElementById('parts-section'); // Container for all parts
+    const addLineButton = document.getElementById('addLineButton'); // "Add Another Line" button
+
+    // Step 1: Populate existing static lines from the server
+    const existingLines = JSON.parse('{{ existing_lines | tojson }}'); // Pull server-rendered draft lines
+    if (existingLines && existingLines.length > 0) {
+        existingLines.forEach((line, index) => {
+            const staticLineHTML = createStaticLineHTML(line, index); // Create static line HTML
+            partsSection.insertAdjacentHTML('beforeend', staticLineHTML); // Append static lines to the parts section
+        });
+        console.log(`${existingLines.length} existing lines loaded and rendered.`);
+    } else {
+        console.log("No existing draft lines found in session.");
+    }
+
+    // Step 2: Attach event listener to the "Add Another Line" button
+    if (addLineButton) {
+        addLineButton.addEventListener('click', () => {
+            // Serialize the current line
+            const currentLine = serializeCurrentLine();
+
+            if (!currentLine) {
+                alert('Please ensure all required fields are filled before adding another line.');
+                return;
+            }
+
+            // Send the current line to the server
+            saveDraftLine(currentLine)
+                .then(() => {
+                    console.log("Line saved successfully. Reloading the page...");
+                    location.reload(); // Reload to reflect the saved line
+                })
+                .catch(err => {
+                    console.error('Failed to save line:', err);
+                    alert('An error occurred while saving the line. Please try again.');
+                });
+        });
+
+        console.log("Event listener attached to 'Add Another Line' button.");
+    } else {
+        console.error("'Add Another Line' button not found. Check your HTML template.");
+    }
+
+    // Step 3: Ensure the New Part wrapper is shown by default
+    const partTemplate = document.querySelector('.part-entry');
+    if (partTemplate) {
+        const partSelectionDropdown = partTemplate.querySelector('select[name="part_selection[]"]');
+        const newPartWrapper = partTemplate.querySelector('.new-part-wrapper');
+        const existingPartSection = partTemplate.querySelector('.existing-part-section');
+
+        if (partSelectionDropdown && newPartWrapper && existingPartSection) {
+            // Show New Part wrapper by default
+            newPartWrapper.style.display = 'block';
+            existingPartSection.style.display = 'none';
+
+            // Bind event listener to toggle based on dropdown value
+            partSelectionDropdown.addEventListener('change', () => {
+                const isNewPart = partSelectionDropdown.value === 'new_part';
+                newPartWrapper.style.display = isNewPart ? 'block' : 'none';
+                existingPartSection.style.display = isNewPart ? 'none' : 'block';
+
+                console.log(`Part selection changed: Is New Part = ${isNewPart}`);
+            });
+
+            console.log("Part selection dropdown initialized.");
+        } else {
+            console.error("Part selection dropdown or wrapper elements not found in template.");
+        }
+    } else {
+        console.error("Part template not found.");
+    }
+
+    console.log("Global initializations complete.");
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('date_of_arrival');
+
+    // Check if the date input is empty
+    if (dateInput && !dateInput.value) {
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today; // Set today's date as the default value
+        console.log(`Default date set to ${today}`);
+    }
+});
+
+// Utility: Serialize the current interactive line
+function serializeCurrentLine() {
+    try {
+        const lineData = {
+            quantity: document.querySelector('input[name="quantity[]"]')?.value || '',
+            unit_price: document.querySelector('input[name="unit_price[]"]')?.value || '',
+            lot_price: document.querySelector('input[name="lot_price[]"]')?.value || '',
+            part_selection: document.querySelector('select[name="part_selection[]"]')?.value || '',
+            use_existing_part: document.querySelector('select[name="use_existing_part[]"]')?.value || 'No',
+            part_number_new: document.querySelector('input[name="part_number_new[]"]')?.value || '',
+            part_description: document.querySelector('input[name="part_description[]"]')?.value || '',
+            anodising_duration: document.querySelector('select[name="anodising_duration[]"]')?.value || '',
+            voltage: document.querySelector('select[name="voltage[]"]')?.value || '',
+            etch: document.querySelector('select[name="etch[]"]')?.value || '',
+            sealing: document.querySelector('select[name="sealing[]"]')?.value || '',
+            dye: document.querySelector('select[name="dye[]"]')?.value || '',
+            brightening: document.querySelector('select[name="brightening[]"]')?.value || '',
+            double_and_etch: document.querySelector('select[name="double_and_etch[]"]')?.value || '',
+            blasting: document.querySelector('select[name="blasting[]"]')?.value || '',
+            anodising_required: document.querySelector('select[name="anodising_required[]"]')?.value || '',
+            jig_type: document.querySelector('select[name="jig_type[]"]')?.value || '',
+            polishing: document.querySelector('input[name="polishing[]"]:checked')?.value || '',
+            custom_upj: document.querySelector('input[name="custom_upj[]"]')?.value || '',
+            custom_jpl: document.querySelector('input[name="custom_jpl[]"]')?.value || '',
+            custom_mpj: document.querySelector('input[name="custom_mpj[]"]')?.value || '',
+        };
+
+        // Validate required fields
+        if (!lineData.quantity || (!lineData.unit_price && !lineData.lot_price)) {
+            console.error("Validation failed: Missing quantity or pricing.");
+            return null; // Return null if validation fails
+        }
+
+        return lineData;
+    } catch (err) {
+        console.error("Error serializing current line:", err);
+        return null;
+    }
+}
+
+// Utility: Send the current line to Flask via AJAX
+async function saveDraftLine(line) {
+    try {
+        console.log("Sending draft line to server:", line);
+
+        // Serialize customer and order details
+        const customerAndOrderDetails = {
+            customer_id: document.getElementById('customer_name')?.value || '',
+            purchase_order_number: document.getElementById('purchase_order_number')?.value || '',
+            date_of_arrival: document.getElementById('date_of_arrival')?.value || '',
+            collection_method: document.getElementById('collection_method')?.value || '',
+        };
+
+        // Send the draft line along with customer and order details
+        const response = await fetch('/save_draft_line', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                line,
+                customer_and_order_details: customerAndOrderDetails,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to save draft line: ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("Error in saveDraftLine:", err);
+        throw err;
+    }
+}
+
+
+// Utility: Create static HTML for a saved line
+function createStaticLineHTML(line, index) {
+    return `
+        <div class="part-entry static-line" data-line='${JSON.stringify(line)}'>
+            <fieldset class="line-section">
+                <legend>Line ${index + 1}</legend>
+                <p><strong>Quantity:</strong> ${line.quantity || 'N/A'}</p>
+                <p><strong>Unit Price:</strong> £${line.unit_price || 'N/A'}</p>
+                <p><strong>Lot Price:</strong> £${line.lot_price || 'N/A'}</p>
+                <p><strong>Part Selection:</strong> ${line.part_selection || 'N/A'}</p>
+                <p><strong>Use Existing Part:</strong> ${line.use_existing_part || 'No'}</p>
+                <p><strong>Part Number:</strong> ${line.part_number || 'N/A'}</p>
+                <p><strong>Part Description:</strong> ${line.part_description || 'N/A'}</p>
+                <p><strong>Anodising Duration:</strong> ${line.anodising_duration || 'N/A'} minutes</p>
+                <p><strong>Voltage:</strong> ${line.voltage || 'N/A'} V</p>
+                <p><strong>Etch:</strong> ${line.etch || 'N/A'}</p>
+                <p><strong>Sealing:</strong> ${line.sealing || 'N/A'}</p>
+                <p><strong>Dye:</strong> ${line.dye || 'N/A'}</p>
+                <p><strong>Brightening:</strong> ${line.brightening || 'N/A'}</p>
+                <p><strong>Double and Etch:</strong> ${line.double_and_etch || 'N/A'}</p>
+                <p><strong>Blasting:</strong> ${line.blasting || 'N/A'}</p>
+                <p><strong>Anodising Required:</strong> ${line.anodising_required || 'N/A'}</p>
+                <p><strong>Jig Type:</strong> ${line.jig_type || 'N/A'}</p>
+                <p><strong>Polishing:</strong> ${line.polishing || 'N/A'}</p>
+                <p><strong>Custom Units Per Jig:</strong> ${line.custom_upj || 'N/A'}</p>
+                <p><strong>Custom Jigs Per Load:</strong> ${line.custom_jpl || 'N/A'}</p>
+                <p><strong>Custom Minutes Per Jig:</strong> ${line.custom_mpj || 'N/A'}</p>
+            </fieldset>
+        </div>
+    `;
+}
+
+// Section 2: Part Entry Management
+
+// Function to handle adding a new part entry
+function addNewPartEntry() {
+    const partsSection = document.getElementById('parts-section');
+    const partTemplate = document.querySelector('.part-entry');
+
+    if (!partsSection || !partTemplate) {
+        console.error("Parts section or part template not found.");
+        return;
+    }
+
+    // Clone the template for a new part entry
+    const newPartEntry = partTemplate.cloneNode(true);
+    newPartEntry.classList.remove('static-line'); // Ensure the cloned entry is editable
+    newPartEntry.querySelectorAll('input, select').forEach(input => {
+        input.value = ''; // Reset input values for the new entry
+    });
+
+    // Append the cloned part entry to the parts section
+    partsSection.appendChild(newPartEntry);
+
+    // Reinitialize event listeners and functionality for the new entry
+    initializePartEntry(newPartEntry);
+
+    console.log("New part entry added.");
+}
+
+// Function to initialize the part entry on page load or for dynamically added entries
+function initializePartEntry(partEntry) {
+    if (!partEntry) {
+        console.error("Part entry not found for initialization.");
+        return;
+    }
+
+    // Step 1: Initialize the part selection dropdown toggle
+    const partSelectionDropdown = partEntry.querySelector('select[name="part_selection[]"]');
+    const newPartWrapper = partEntry.querySelector('.new-part-wrapper');
+    const existingPartSection = partEntry.querySelector('.existing-part-section');
+
+    if (partSelectionDropdown && newPartWrapper && existingPartSection) {
+        // Show "New Part" wrapper by default
+        newPartWrapper.style.display = 'block';
+        existingPartSection.style.display = 'none';
+
+        // Attach change event listener
+        partSelectionDropdown.addEventListener('change', () => {
+            const isNewPart = partSelectionDropdown.value === 'new_part';
+            newPartWrapper.style.display = isNewPart ? 'block' : 'none';
+            existingPartSection.style.display = isNewPart ? 'none' : 'block';
+            console.log(`Part selection changed: Is New Part = ${isNewPart}`);
+        });
+    } else {
+        console.warn("Part selection dropdown or wrapper elements not found.");
+    }
+
+    // Step 2: Bind price input validation
+    bindPriceInputEvents(partEntry);
+
+    // Step 3: Initialize polishing options
+    initializePolishingListeners(partEntry);
+
+    // Step 4: Initialize advanced options toggle
+    initializeAdvancedOptionsToggle(partEntry);
+
+    console.log("Part entry initialized.");
+}
+
+// Function to bind price input events for a part entry
+function bindPriceInputEvents(partEntry) {
+    const unitPriceInput = partEntry.querySelector('input[name="unit_price[]"]');
+    const lotPriceInput = partEntry.querySelector('input[name="lot_price[]"]');
+
+    if (unitPriceInput) {
+        unitPriceInput.addEventListener('input', () => clearOtherPriceInput(unitPriceInput, lotPriceInput));
+        unitPriceInput.addEventListener('blur', () => {
+            if (unitPriceInput.value) unitPriceInput.value = formatToTwoDecimals(unitPriceInput.value);
+        });
+    }
+
+    if (lotPriceInput) {
+        lotPriceInput.addEventListener('input', () => clearOtherPriceInput(lotPriceInput, unitPriceInput));
+        lotPriceInput.addEventListener('blur', () => {
+            if (lotPriceInput.value) lotPriceInput.value = formatToTwoDecimals(lotPriceInput.value);
+        });
+    }
+}
+
+// Utility: Clear the value of the other price input field when one is filled
+function clearOtherPriceInput(currentInput, otherInput) {
+    if (otherInput && currentInput.value) {
+        otherInput.value = ''; // Clear the other input field
+        console.log(`Cleared ${otherInput.name} as ${currentInput.name} was filled.`);
+    }
+}
+
+// Utility: Format a value to two decimal places
+function formatToTwoDecimals(value) {
+    return parseFloat(value).toFixed(2);
+}
+
+// Function to initialize polishing-related fields
+function initializePolishingListeners(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingNoRadio = partEntry.querySelector('input[name="polishing[]"][value="No"]');
+    const addStepButton = partEntry.querySelector('#addPolishingStepButton');
+
+    if (polishingYesRadio && polishingNoRadio) {
+        polishingYesRadio.addEventListener('change', () => togglePolishingOptions(partEntry));
+        polishingNoRadio.addEventListener('change', () => togglePolishingOptions(partEntry));
+    }
+
+    if (addStepButton) {
+        addStepButton.addEventListener('click', () => addPolishingStep(partEntry));
+    }
+}
+
+// Utility: Toggle polishing options visibility
+function togglePolishingOptions(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingOptions = partEntry.querySelector('.polishing-options');
+    const polishingContainer = partEntry.querySelector('#polishing-steps-container');
+
+    if (polishingYesRadio && polishingYesRadio.checked) {
+        polishingOptions.style.display = 'block';
+        // Ensure at least one polishing step exists
+        if (!polishingContainer.querySelector('.polishing-step')) {
+            addPolishingStep(partEntry);
+        }
+    } else {
+        polishingOptions.style.display = 'none';
+        polishingContainer.innerHTML = ''; // Clear all polishing steps
+        polishingStepCount = 0;
+    }
+
+    console.log("Polishing options visibility toggled.");
+}
+
+// Function to add a new polishing step
+function addPolishingStep(partEntry) {
+    const polishingContainer = partEntry.querySelector('#polishing-steps-container');
+    if (!polishingContainer) {
+        console.error("Polishing container not found.");
+        return;
+    }
+
+    if (polishingStepCount >= 3) {
+        alert("You can add up to 3 polishing steps only.");
+        return;
+    }
+
+    polishingStepCount++;
+
+    // Create a new polishing step fieldset
+    const stepFieldset = document.createElement('fieldset');
+    stepFieldset.classList.add('polishing-step');
+    stepFieldset.dataset.step = polishingStepCount;
+
+    // Add legend for the polishing step
+    const stepLegend = document.createElement('legend');
+    stepLegend.textContent = `Polishing Step ${polishingStepCount}`;
+    stepFieldset.appendChild(stepLegend);
+
+    // Equipment dropdown
+    const equipmentLabel = document.createElement('label');
+    equipmentLabel.textContent = "Equipment:";
+    const equipmentSelect = document.createElement('select');
+    equipmentSelect.name = `polishing_equipment_${polishingStepCount}`;
+    equipmentSelect.required = true;
+    const equipmentOptions = ["Option1", "Option2", "Option3"]; // Add your actual options here
+    equipmentOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        equipmentSelect.appendChild(opt);
+    });
+    stepFieldset.appendChild(equipmentLabel);
+    stepFieldset.appendChild(equipmentSelect);
+
+    // Append the step fieldset to the polishing container
+    polishingContainer.appendChild(stepFieldset);
+
+    console.log(`Polishing step ${polishingStepCount} added.`);
+}
+
+// Function to initialize advanced options toggle
+function initializeAdvancedOptionsToggle(partEntry) {
+    const advancedYes = partEntry.querySelector('input[name="enable_advanced"][value="Yes"]');
+    const advancedNo = partEntry.querySelector('input[name="enable_advanced"][value="No"]');
+    const advancedFields = partEntry.querySelector('.advanced-fields');
+
+    if (advancedYes && advancedNo && advancedFields) {
+        const toggleFields = () => {
+            const showFields = advancedYes.checked;
+            advancedFields.style.display = showFields ? 'block' : 'none';
+
+            // Enable/disable custom fields dynamically
+            advancedFields.querySelectorAll('input[name="custom_upj[]"], input[name="custom_jpl[]"], input[name="custom_mpj[]"]').forEach(input => {
+                if (showFields) {
+                    input.removeAttribute('disabled'); // Enable fields
+                    input.setAttribute('required', 'true'); // Make fields required
+                } else {
+                    input.setAttribute('disabled', 'true'); // Disable fields
+                    input.removeAttribute('required'); // Remove requirement
+                }
+            });
+        };
+
+        // Attach event listeners to the toggles
+        advancedYes.addEventListener('change', toggleFields);
+        advancedNo.addEventListener('change', toggleFields);
+
+        // Initialize the fields' visibility
+        toggleFields();
+
+        console.log("Advanced options toggle initialized.");
+    } else {
+        console.warn("Advanced options toggle elements not found.");
+    }
+}
+
+// Section 3: Polishing Step Management
+
+// Polishing step options
+const equipmentOptions = [
+    "Band & Grease (50mm)",
+    "Band & Grease (100mm)",
+    "Green Sisal",
+    "V/C Stitch Mop 1 Section",
+    "V/C Stitch Mop 2 Section",
+    "V/C Stitch Mop 3 Section",
+    "V/C Stitch Mop 4 Section",
+    "12\" x 4\" Airflow (Orion)",
+    "Coolair Sateen (BAM)"
+];
+const gritOptions = ["60", "120", "150", "180", "220", "240", "320"];
+const compoundOptions = ["Carbrax 1113", "Midas Yellow", "Compound of Polisher's Choosing"];
+
+// Initialize polishing step count
+let polishingStepCount = 0;
+
+/**
+ * Add a new polishing step to the current template
+ * @param {HTMLElement} partEntry - The part entry container
+ */
+function addPolishingStep(partEntry) {
+    const polishingContainer = partEntry.querySelector('#polishing-steps-container');
+    if (!polishingContainer) {
+        console.error("Polishing container not found.");
+        return;
+    }
+
+    if (polishingStepCount >= 3) {
+        alert("You can add up to 3 polishing steps only.");
+        return;
+    }
+
+    polishingStepCount++;
+
+    // Create a new polishing step fieldset
+    const stepFieldset = document.createElement('fieldset');
+    stepFieldset.classList.add('polishing-step');
+    stepFieldset.dataset.step = polishingStepCount;
+
+    // Add legend for the polishing step
+    const stepLegend = document.createElement('legend');
+    stepLegend.textContent = `Polishing Step ${polishingStepCount}`;
+    stepFieldset.appendChild(stepLegend);
+
+    // Equipment dropdown
+    const equipmentLabel = document.createElement('label');
+    equipmentLabel.textContent = "Equipment:";
+    const equipmentSelect = document.createElement('select');
+    equipmentSelect.name = `polishing_equipment_${polishingStepCount}`;
+    equipmentSelect.required = true;
+    equipmentOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        equipmentSelect.appendChild(opt);
+    });
+    stepFieldset.appendChild(equipmentLabel);
+    stepFieldset.appendChild(equipmentSelect);
+
+    // Grit dropdown
+    const gritLabel = document.createElement('label');
+    gritLabel.textContent = "Grit:";
+    const gritSelect = document.createElement('select');
+    gritSelect.name = `polishing_grit_${polishingStepCount}`;
+    gritSelect.required = true;
+    gritOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        gritSelect.appendChild(opt);
+    });
+    stepFieldset.appendChild(gritLabel);
+    stepFieldset.appendChild(gritSelect);
+
+    // Compound dropdown
+    const compoundLabel = document.createElement('label');
+    compoundLabel.textContent = "Compound:";
+    const compoundSelect = document.createElement('select');
+    compoundSelect.name = `polishing_compound_${polishingStepCount}`;
+    compoundSelect.required = true;
+    compoundOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        compoundSelect.appendChild(opt);
+    });
+    stepFieldset.appendChild(compoundLabel);
+    stepFieldset.appendChild(compoundSelect);
+
+    // Remove step button
+    const removeStepButton = document.createElement('button');
+    removeStepButton.type = 'button';
+    removeStepButton.textContent = 'Remove Step';
+    removeStepButton.addEventListener('click', () => {
+        stepFieldset.remove();
+        polishingStepCount--;
+        console.log(`Polishing step ${polishingStepCount} removed.`);
+    });
+    stepFieldset.appendChild(removeStepButton);
+
+    polishingContainer.appendChild(stepFieldset);
+    console.log(`Polishing step ${polishingStepCount} added.`);
+}
+
+/**
+ * Toggle visibility of polishing options based on the user's choice
+ * @param {HTMLElement} partEntry - The part entry container
+ */
+function togglePolishingOptions(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingOptions = partEntry.querySelector('.polishing-options');
+    const polishingContainer = partEntry.querySelector('#polishing-steps-container');
+
+    if (polishingYesRadio && polishingYesRadio.checked) {
+        polishingOptions.style.display = 'block';
+        // Ensure at least one polishing step exists
+        if (!polishingContainer.querySelector('.polishing-step')) {
+            addPolishingStep(partEntry);
+        }
+    } else {
+        polishingOptions.style.display = 'none';
+        polishingContainer.innerHTML = ''; // Clear all polishing steps
+        polishingStepCount = 0;
+    }
+
+    console.log("Polishing options visibility toggled.");
+}
+
+/**
+ * Initialize event listeners for polishing-related fields
+ * @param {HTMLElement} partEntry - The part entry container
+ */
+function initializePolishingListeners(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingNoRadio = partEntry.querySelector('input[name="polishing[]"][value="No"]');
+    const addStepButton = partEntry.querySelector('#addPolishingStepButton');
+
+    if (polishingYesRadio && polishingNoRadio) {
+        polishingYesRadio.addEventListener('change', () => togglePolishingOptions(partEntry));
+        polishingNoRadio.addEventListener('change', () => togglePolishingOptions(partEntry));
+    }
+
+    if (addStepButton) {
+        addStepButton.addEventListener('click', () => addPolishingStep(partEntry));
+    }
+}
+
+// Initialize polishing options on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const partEntry = document.querySelector('.part-entry');
+    if (partEntry) {
+        initializePolishingListeners(partEntry);
+        togglePolishingOptions(partEntry); // Set the initial state
+        console.log("Polishing options initialized.");
+    } else {
+        console.error("Part entry template not found for polishing initialization.");
+    }
+});
+
+// Section 4: Price Input Validation and Formatting
+
+/**
+ * Function to validate price inputs (unit price and lot price).
+ * Ensures at least one price is filled for the single visible part entry.
+ * @param {HTMLElement} partEntry - The part entry container
+ * @returns {boolean} - True if validation passes, otherwise false
+ */
+ function validatePriceInputs(partEntry) {
+    const unitPriceInput = partEntry.querySelector('input[name="unit_price[]"]');
+    const lotPriceInput = partEntry.querySelector('input[name="lot_price[]"]');
+
+    const unitPrice = unitPriceInput?.value || '';
+    const lotPrice = lotPriceInput?.value || '';
+
+    // Ensure at least one of the prices is filled
+    if (!unitPrice && !lotPrice) {
+        alert("Please provide either a unit price or a lot price.");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Function to format a value to two decimal places
+ * @param {string} value - The value to format
+ * @returns {string} - The formatted value
+ */
+function formatToTwoDecimals(value) {
+    return parseFloat(value).toFixed(2);
+}
+
+/**
+ * Function to bind events to price input fields
+ * @param {HTMLElement} partEntry - The part entry container
+ */
+function bindPriceInputEvents(partEntry) {
+    const unitPriceInput = partEntry.querySelector('input[name="unit_price[]"]');
+    const lotPriceInput = partEntry.querySelector('input[name="lot_price[]"]');
+
+    if (unitPriceInput) {
+        unitPriceInput.addEventListener('input', () => clearOtherPriceInput(unitPriceInput, lotPriceInput));
+        unitPriceInput.addEventListener('blur', () => {
+            if (unitPriceInput.value) unitPriceInput.value = formatToTwoDecimals(unitPriceInput.value);
+        });
+    }
+
+    if (lotPriceInput) {
+        lotPriceInput.addEventListener('input', () => clearOtherPriceInput(lotPriceInput, unitPriceInput));
+        lotPriceInput.addEventListener('blur', () => {
+            if (lotPriceInput.value) lotPriceInput.value = formatToTwoDecimals(lotPriceInput.value);
+        });
+    }
+}
+
+/**
+ * Function to clear the value of the other price input field when one is filled
+ * @param {HTMLElement} currentInput - The currently active price input
+ * @param {HTMLElement} otherInput - The other price input to clear
+ */
+function clearOtherPriceInput(currentInput, otherInput) {
+    if (otherInput && currentInput.value) {
+        otherInput.value = ''; // Clear the other input field
+        console.log(`Cleared ${otherInput.name} as ${currentInput.name} was filled.`);
+    }
+}
+
+// Initialize price input event listeners on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const partEntry = document.querySelector('.part-entry'); // Single visible part entry
+
+    if (partEntry) {
+        bindPriceInputEvents(partEntry);
+        console.log("Price input event listeners initialized for the part entry.");
+    } else {
+        console.error("Part entry template not found for price input initialization.");
+    }
+});
+
+// Section 5: Line Management
+
+/**
+ * Function to add a new part entry dynamically.
+ * Serializes the current line, validates it, and appends a new editable line.
+ */
+ function addNewPartEntry() {
+    const partsSection = document.getElementById('parts-section');
+    const partTemplate = document.querySelector('.part-entry');
+
+    if (!partsSection || !partTemplate) {
+        console.error("Parts section or part template not found.");
+        return;
+    }
+
+    // Serialize the current line's data
+    const currentLine = serializeCurrentLine();
+    if (!currentLine) {
+        alert('Please ensure all required fields are filled before adding another line.');
+        return;
+    }
+
+    // Save the current line's data to the backend
+    saveDraftLine(currentLine)
+        .then(() => {
+            console.log("Current line successfully saved.");
+
+            // Clone the existing part entry template
+            const newPartEntry = partTemplate.cloneNode(true);
+            newPartEntry.classList.remove('static-line'); // Ensure it's editable
+            newPartEntry.querySelectorAll('input, select').forEach(input => {
+                input.value = ''; // Clear all values for the new entry
+            });
+
+            // Append the new part entry and reinitialize its functionality
+            partsSection.appendChild(newPartEntry);
+            initializePartEntry(newPartEntry); // Reuse initialization from Section 1
+
+            console.log("New part entry added and initialized.");
+        })
+        .catch(err => {
+            console.error("Error saving draft line:", err);
+            alert("An error occurred while saving the current line. Please try again.");
+        });
+}
+
+/**
+ * Attach the "Add Another Line" button functionality on page load.
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const addLineButton = document.getElementById('addLineButton');
+
+    if (addLineButton) {
+        addLineButton.addEventListener('click', addNewPartEntry); // Attach functionality to add lines
+        console.log("'Add Another Line' button initialized.");
+    } else {
+        console.error("'Add Another Line' button not found.");
+    }
+});
+
+// Section 6: Dynamic Customer and Part Fetching
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Prepopulate Customer/Order Details if available
+    const customerAndOrderDetails = JSON.parse('{{ customer_and_order_details | tojson }}'); // Injected from backend
+    
+    if (customerAndOrderDetails) {
+        console.log("Prepopulating customer and order details:", customerAndOrderDetails);
+
+        // Populate Customer Name
+        const customerDropdown = document.getElementById('customer_name');
+        if (customerDropdown && customerAndOrderDetails.customer_id) {
+            customerDropdown.value = customerAndOrderDetails.customer_id;
+        }
+
+        // Populate Purchase Order Number
+        const purchaseOrderInput = document.getElementById('purchase_order_number');
+        if (purchaseOrderInput && customerAndOrderDetails.purchase_order_number) {
+            purchaseOrderInput.value = customerAndOrderDetails.purchase_order_number;
+        }
+
+        // Populate Date of Arrival
+        const dateOfArrivalInput = document.getElementById('date_of_arrival');
+        if (dateOfArrivalInput && customerAndOrderDetails.date_of_arrival) {
+            dateOfArrivalInput.value = customerAndOrderDetails.date_of_arrival;
+        }
+
+        // Populate Collection Method
+        const collectionMethodDropdown = document.getElementById('collection_method');
+        if (collectionMethodDropdown && customerAndOrderDetails.collection_method) {
+            collectionMethodDropdown.value = customerAndOrderDetails.collection_method;
+        }
+
+        console.log("Customer and order details prepopulated successfully.");
+    } else {
+        console.log("No customer and order details found in session.");
+    }
+
+    // Initialize dynamic parts fetching and selection
+    const customerSelect = document.getElementById('customer_name'); // Customer dropdown
+    const partDropdown = document.querySelector('.part-selection-dropdown'); // Part selection dropdown
+    const newPartWrapper = document.querySelector('.new-part-wrapper'); // New Part Details wrapper
+    const partNumberInput = document.querySelector('input[name="part_number[]"]'); // Part number input for existing part
+    const partNumberNewInput = document.querySelector('input[name="part_number_new[]"]'); // Part number input for new part
+
+    if (customerSelect) {
+        // Attach event listener to dynamically fetch parts when a customer is selected
+        customerSelect.addEventListener('change', () => fetchPartsForCustomer(customerSelect.value, partDropdown));
+        console.log("Event listener attached to customer dropdown.");
+    } else {
+        console.warn("Customer dropdown not found.");
+    }
+
+    if (partDropdown) {
+        // Attach event listener to handle visibility of New Part Details based on dropdown value
+        partDropdown.addEventListener('change', () => handlePartSelection(partDropdown, newPartWrapper, partNumberInput, partNumberNewInput));
+        console.log("Event listener attached to part dropdown.");
+    } else {
+        console.error("Part selection dropdown not found.");
+    }
+
+    // Ensure New Part Details is visible by default
+    if (newPartWrapper) {
+        newPartWrapper.style.display = 'block';
+        console.log("New Part Details shown by default.");
+    } else {
+        console.error("New Part Wrapper not found.");
+    }
+});
+
+/**
+ * Fetch parts for the selected customer and populate the part dropdown.
+ * @param {string} customerId - The ID of the selected customer
+ * @param {HTMLSelectElement} partDropdown - The dropdown to populate with parts
+ */
+async function fetchPartsForCustomer(customerId, partDropdown) {
+    if (!customerId) {
+        resetPartDropdown(partDropdown);
+        console.log("Customer deselected. Reset part dropdown.");
+        return;
+    }
+
+    try {
+        // Fetch parts for the selected customer
+        const response = await fetch(`/get_parts/${customerId}`);
+        const parts = await response.json();
+
+        // Populate the part dropdown
+        populatePartDropdown(partDropdown, parts, customerId);
+    } catch (error) {
+        console.error("Error fetching parts:", error);
+        resetPartDropdown(partDropdown, "Error loading parts");
+    }
+}
+
+/**
+ * Populate the part dropdown with fetched parts.
+ * @param {HTMLSelectElement} dropdown - The dropdown to populate
+ * @param {Array} parts - The list of parts to populate with
+ * @param {string} customerId - The ID of the selected customer
+ */
+function populatePartDropdown(dropdown, parts, customerId) {
+    dropdown.innerHTML = '<option value="No" selected>No (Create New Part)</option>'; // Reset dropdown with default
+
+    if (parts && parts.length > 0) {
+        parts.forEach(part => {
+            const opt = document.createElement('option');
+            opt.value = part.part_number; // Send the part number to part_number[]
+            opt.textContent = `${part.part_number} - ${part.part_description}`;
+            dropdown.appendChild(opt);
+        });
+        console.log(`Populated dropdown with ${parts.length} parts for customer ID ${customerId}.`);
+    } else {
+        console.warn(`No parts found for customer ID ${customerId}.`);
+    }
+}
+
+/**
+ * Reset the part dropdown to its default state.
+ * @param {HTMLSelectElement} dropdown - The dropdown to reset
+ * @param {string} [message="No (Create New Part)"] - The default message for the dropdown
+ */
+function resetPartDropdown(dropdown, message = "No (Create New Part)") {
+    dropdown.innerHTML = `<option value="No" selected>${message}</option>`;
+    console.log("Part dropdown reset to default state.");
+}
+
+/**
+ * Handle visibility of New Part Details and part number assignment based on part selection.
+ * @param {HTMLSelectElement} partDropdown - The dropdown to monitor
+ * @param {HTMLElement} newPartWrapper - The wrapper containing New Part Details
+ * @param {HTMLInputElement} partNumberInput - The input field for existing part numbers
+ * @param {HTMLInputElement} partNumberNewInput - The input field for new part numbers
+ */
+function handlePartSelection(partDropdown, newPartWrapper, partNumberInput, partNumberNewInput) {
+    if (!newPartWrapper) {
+        console.error("New Part Wrapper not found.");
+        return;
+    }
+
+    const selectedValue = partDropdown.value;
+
+    if (selectedValue === "No") {
+        // If "No (Create New Part)" is selected
+        newPartWrapper.style.display = 'block'; // Show New Part Details
+        if (partNumberNewInput) partNumberNewInput.value = ""; // Clear the new part number field
+        if (partNumberInput) partNumberInput.value = ""; // Ensure part_number[] is empty
+        console.log("New Part Details shown, existing part fields cleared.");
+    } else {
+        // If an existing part is selected
+        newPartWrapper.style.display = 'none'; // Hide New Part Details
+        if (partNumberInput) partNumberInput.value = selectedValue; // Set part_number[] to the selected value
+        if (partNumberNewInput) partNumberNewInput.value = ""; // Ensure part_number_new[] is empty
+        console.log(`Existing part selected: ${selectedValue}. Part Number assigned to part_number[].`);
+    }
+}
+
+
+// Section 7: Form Submission Handling
+
+/**
+ * Handle form submission with validation and preparation of payload fields.
+ * This ensures both static and dynamic lines include all necessary fields,
+ * including `use_existing_part[]`.
+ * 
+ * @param {Event} event - The form submission event.
+ */
+ function handleFormSubmission(event) {
+    console.log('Form submission initiated.');
+
+    const orderForm = event.target; // Get the form being submitted
+    const staticLines = document.querySelectorAll('.static-line'); // Find all static lines
+
+    // Step 1: Append static line data to the form
+    staticLines.forEach((staticLine) => {
+        // Extract the JSON data from the `data-line` attribute
+        const lineData = JSON.parse(staticLine.getAttribute('data-line'));
+
+        // Dynamically create hidden inputs for each field in the static line
+        for (const [key, value] of Object.entries(lineData)) {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `${key}[]`; // Ensure it matches the form's array field naming
+            hiddenInput.value = value;
+
+            // Append the hidden input to the form
+            orderForm.appendChild(hiddenInput);
+        }
+
+        // IMPORTANT: Do NOT append `use_existing_part[]` explicitly here.
+        // It's already handled within the `lineData` JSON!
+    });
+
+    console.log('Static lines appended to the form as hidden inputs.');
+
+    // Step 2: Validate the dynamic part entry
+    const partEntry = document.querySelector('.part-entry:not(.static-line)'); // Get the current part entry being filled
+
+    if (partEntry) {
+        if (!validateFormInputs(partEntry)) {
+            event.preventDefault(); // Prevent form submission if validation fails
+            console.error('Form submission halted due to validation errors.');
+            return;
+        }
+
+        // Ensure custom fields are included and `enable_advanced` is excluded
+        handleAdvancedFieldsBeforeSubmission(partEntry);
+
+        // Handle polishing steps before submission
+        handlePolishingStepsBeforeSubmission(partEntry);
+
+        console.log('Dynamic part entry validated and prepared.');
+    } else {
+        console.warn('No dynamic part entry found. Proceeding with static lines only.');
+    }
+
+    console.log('Form submission ready.');
+}
+
+/**
+ * Validate all inputs in the dynamic part entry.
+ * Ensures key fields are completed correctly.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ * @returns {boolean} - True if validation passes, otherwise false.
+ */
+function validateFormInputs(partEntry) {
+    let isValid = true;
+
+    // Validate price inputs
+    const unitPrice = partEntry.querySelector('input[name="unit_price[]"]')?.value || '';
+    const lotPrice = partEntry.querySelector('input[name="lot_price[]"]')?.value || '';
+
+    // Ensure at least one price is filled
+    if (!unitPrice && !lotPrice) {
+        alert('Please provide either a unit price or a lot price.');
+        isValid = false;
+    }
+
+    // Validate polishing steps if polishing is enabled
+    if (!validatePolishingSteps(partEntry)) {
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+/**
+ * Handle advanced fields before submission.
+ * Always include `custom_upj[]`, `custom_jpl[]`, and `custom_mpj[]` in the payload.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+function handleAdvancedFieldsBeforeSubmission(partEntry) {
+    const advancedFields = partEntry.querySelector('.advanced-fields');
+
+    if (advancedFields) {
+        // Always include the fields in the payload
+        advancedFields.querySelectorAll('input[name="custom_upj[]"], input[name="custom_jpl[]"], input[name="custom_mpj[]"]').forEach(input => {
+            input.disabled = false; // Ensure fields are included in the payload
+            if (!input.value) {
+                input.value = ''; // Set empty value if not filled
+            }
+        });
+
+        console.log('Advanced fields prepared for submission.');
+    }
+
+    // Remove `enable_advanced` from the payload
+    const enableAdvancedInput = partEntry.querySelector('input[name="enable_advanced"]');
+    if (enableAdvancedInput) {
+        enableAdvancedInput.disabled = true; // Exclude from the payload
+        console.log('`enable_advanced` field excluded from the payload.');
+    }
+}
+
+/**
+ * Handle polishing steps before submission.
+ * Ensures the polishing step structure is valid if polishing is enabled.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+function handlePolishingStepsBeforeSubmission(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingContainer = partEntry.querySelector('#polishing-steps-container');
+
+    if (polishingYesRadio && polishingYesRadio.checked) {
+        if (!polishingContainer.querySelector('.polishing-step')) {
+            alert('Polishing is enabled, but no steps are defined. Please add at least one polishing step.');
+            throw new Error('Polishing enabled without steps.');
+        }
+    } else {
+        // Clear polishing steps if not required
+        if (polishingContainer) polishingContainer.innerHTML = '';
+        console.log('Polishing disabled. Cleared polishing steps for this entry.');
+    }
+}
+
+/**
+ * Validate polishing steps.
+ * Ensures that if polishing is enabled, at least one step is defined.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ * @returns {boolean} - True if validation passes, otherwise false.
+ */
+function validatePolishingSteps(partEntry) {
+    const polishingYesRadio = partEntry.querySelector('input[name="polishing[]"][value="Yes"]');
+    const polishingSteps = partEntry.querySelectorAll('.polishing-step');
+
+    if (polishingYesRadio && polishingYesRadio.checked && polishingSteps.length === 0) {
+        alert('Polishing is enabled, but no steps are defined.');
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Attach the form submission handler and initialize any pre-submission requirements.
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const orderForm = document.getElementById('orderForm');
+
+    if (orderForm) {
+        // Attach the submission handler
+        orderForm.addEventListener('submit', handleFormSubmission);
+        console.log('Form submission handler attached.');
+    } else {
+        console.error("Order form with ID 'orderForm' not found.");
+    }
+});
+
+
+// Section 8: Utility Functions
+
+/**
+ * Initialize all interactive elements for the single part entry.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+ function initializePartEntry(partEntry) {
+    if (!partEntry) {
+        console.error("Part entry not found for initialization.");
+        return;
+    }
+
+    // Initialize visibility of "New Part" and "Existing Part" fields
+    const partDropdown = partEntry.querySelector('select[name="part_selection[]"]');
+    if (partDropdown) {
+        const isNewPart = partDropdown.value === 'new_part';
+        togglePartFields(isNewPart);
+
+        partDropdown.addEventListener('change', () => {
+            const isNewPartSelected = partDropdown.value === 'new_part';
+            togglePartFields(isNewPartSelected);
+        });
+
+        console.log("Part dropdown initialized and event listener attached.");
+    } else {
+        console.warn("Part dropdown not found in part entry.");
+    }
+
+    // Initialize advanced field toggles
+    const advancedYes = partEntry.querySelector('input[name="enable_advanced"][value="Yes"]');
+    const advancedNo = partEntry.querySelector('input[name="enable_advanced"][value="No"]');
+    if (advancedYes && advancedNo) {
+        advancedYes.addEventListener('change', () => toggleAdvancedFields(partEntry));
+        advancedNo.addEventListener('change', () => toggleAdvancedFields(partEntry));
+        toggleAdvancedFields(partEntry); // Set initial state
+    } else {
+        console.warn("Advanced field toggles not found in part entry.");
+    }
+
+    // Initialize polishing step toggles
+    initializePolishingListeners(partEntry);
+
+    // Initialize anodising options toggle
+    const anodisingSelect = partEntry.querySelector('select[name="anodising_required[]"]');
+    if (anodisingSelect) {
+        anodisingSelect.addEventListener('change', () => toggleAnodisingOptions(partEntry));
+        toggleAnodisingOptions(partEntry); // Set initial state
+    }
+
+    // Initialize price input events
+    bindPriceInputEvents(partEntry);
+
+    console.log("Part entry initialized with all interactive elements.");
+}
+
+/**
+ * Toggle visibility of "New Part" and "Existing Part" fields.
+ * @param {boolean} isNewPart - Whether the "New Part" option is selected.
+ */
+function togglePartFields(isNewPart) {
+    const newPartWrapper = document.querySelector('.new-part-wrapper');
+    const existingPartSection = document.querySelector('.existing-part-section');
+
+    if (newPartWrapper && existingPartSection) {
+        newPartWrapper.style.display = isNewPart ? 'block' : 'none';
+        existingPartSection.style.display = isNewPart ? 'none' : 'block';
+        console.log(`Toggled part fields. New Part: ${isNewPart}`);
+    } else {
+        console.warn("New Part or Existing Part sections not found.");
+    }
+}
+
+/**
+ * Toggle visibility of advanced fields and ensure empty fields are included in payload when disabled.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+ function toggleAdvancedFields(partEntry) {
+    const advancedYes = partEntry.querySelector('input[name="enable_advanced"][value="Yes"]');
+    const advancedNo = partEntry.querySelector('input[name="enable_advanced"][value="No"]');
+    const advancedFields = partEntry.querySelector('.advanced-fields');
+
+    if (advancedYes && advancedNo && advancedFields) {
+        const showFields = advancedYes.checked;
+
+        // Show or hide the advanced fields
+        advancedFields.style.display = showFields ? 'block' : 'none';
+
+        // Loop through each custom input field
+        advancedFields.querySelectorAll('input').forEach(input => {
+            if (showFields) {
+                input.removeAttribute('disabled'); // Enable fields
+                input.setAttribute('required', 'true'); // Make fields required
+            } else {
+                input.removeAttribute('required'); // Remove required attribute
+                input.setAttribute('disabled', 'true'); // Disable fields (for UI)
+                input.value = ''; // Ensure it's empty but still submitted
+            }
+        });
+
+        console.log(`Advanced fields toggled. Visible: ${showFields}`);
+    } else {
+        console.warn("Advanced options elements not found in part entry.");
+    }
+}
+
+// Ensure event listeners are properly attached on page load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.part-entry').forEach(partEntry => {
+        const advancedYes = partEntry.querySelector('input[name="enable_advanced"][value="Yes"]');
+        const advancedNo = partEntry.querySelector('input[name="enable_advanced"][value="No"]');
+
+        if (advancedYes && advancedNo) {
+            advancedYes.addEventListener('change', () => toggleAdvancedFields(partEntry));
+            advancedNo.addEventListener('change', () => toggleAdvancedFields(partEntry));
+
+            // Initialize fields on page load
+            toggleAdvancedFields(partEntry);
+        } else {
+            console.warn("Advanced option radio buttons not found.");
+        }
+    });
+});
+
+// 🛠️ Ensure empty fields are included in the form payload
+document.addEventListener('submit', (event) => {
+    document.querySelectorAll('.part-entry').forEach(partEntry => {
+        const advancedYes = partEntry.querySelector('input[name="enable_advanced"][value="Yes"]');
+        const advancedFields = partEntry.querySelector('.advanced-fields');
+
+        if (advancedYes && !advancedYes.checked) {
+            // If "No" is selected, ensure fields are present in the form but empty
+            advancedFields.querySelectorAll('input').forEach(input => {
+                input.removeAttribute('disabled'); // Enable it just before submission
+                input.value = ''; // Ensure it's included in form data as empty
+            });
+        }
+    });
+});
+
+
+/**
+ * Toggle visibility of anodising options based on selection.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+function toggleAnodisingOptions(partEntry) {
+    const anodisingSelect = partEntry.querySelector('select[name="anodising_required[]"]');
+    const anodisingDependentFields = partEntry.querySelectorAll('.anodising-dependent');
+
+    if (anodisingSelect) {
+        const isAnodisingRequired = anodisingSelect.value !== 'No anodic treatment required';
+        anodisingDependentFields.forEach(field => {
+            field.style.display = isAnodisingRequired ? 'block' : 'none';
+            field.querySelectorAll('input, select').forEach(input => {
+                input.required = isAnodisingRequired; // Require fields only if anodising is required
+            });
+        });
+
+        console.log(`Anodising options toggled. Required: ${isAnodisingRequired}`);
+    } else {
+        console.warn("Anodising options toggle not found in part entry.");
+    }
+}
+
+/**
+ * Bind price input events for a part entry.
+ * Ensures mutual exclusivity of unit price and lot price inputs.
+ * @param {HTMLElement} partEntry - The container for the part entry form.
+ */
+function bindPriceInputEvents(partEntry) {
+    const unitPriceInput = partEntry.querySelector('input[name="unit_price[]"]');
+    const lotPriceInput = partEntry.querySelector('input[name="lot_price[]"]');
+
+    if (unitPriceInput && lotPriceInput) {
+        unitPriceInput.addEventListener('input', () => clearOtherPriceInput(unitPriceInput, lotPriceInput));
+        unitPriceInput.addEventListener('blur', () => {
+            if (unitPriceInput.value) unitPriceInput.value = formatToTwoDecimals(unitPriceInput.value);
+        });
+
+        lotPriceInput.addEventListener('input', () => clearOtherPriceInput(lotPriceInput, unitPriceInput));
+        lotPriceInput.addEventListener('blur', () => {
+            if (lotPriceInput.value) lotPriceInput.value = formatToTwoDecimals(lotPriceInput.value);
+        });
+
+        console.log("Price input events bound for part entry.");
+    } else {
+        console.warn("Price inputs not found in part entry.");
+    }
+}
+
+/**
+ * Clear the value of the other price input field when one is filled.
+ * @param {HTMLElement} currentInput - The currently active price input.
+ * @param {HTMLElement} otherInput - The other price input to clear.
+ */
+function clearOtherPriceInput(currentInput, otherInput) {
+    if (currentInput.value) {
+        otherInput.value = ''; // Clear the other input field
+        console.log(`Cleared ${otherInput.name} as ${currentInput.name} was filled.`);
+    }
+}
+
+/**
+ * Format a numeric value to two decimal places.
+ * @param {string} value - The value to format.
+ * @returns {string} - The formatted value.
+ */
+function formatToTwoDecimals(value) {
+    return parseFloat(value).toFixed(2);
+}
+
+</script>
+</body>
+</html>
+
