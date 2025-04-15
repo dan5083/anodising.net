@@ -38,4 +38,4 @@ To replicate or build upon this project:
 
 Clone the repository
 
-Set up environment variables for Azure credentials and PostgreSQL
+Set up environment variables for Azure credentials and SQL Server & DB (Use STANDARD SQL AUTHENTICATION!!!!)
